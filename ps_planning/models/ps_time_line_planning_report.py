@@ -40,7 +40,7 @@ class PsTimeLinePlanningReport(models.Model):
             WHERE
                 product_uom_id=(
                     SELECT res_id FROM ir_model_data WHERE
-                    model='uom' AND name='product_uom_hour'
+                    module='uom' AND name='product_uom_hour'
                 )
             UNION (
             WITH
