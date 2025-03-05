@@ -11,6 +11,7 @@ from odoo import api, fields, models
 class CrmMonthlyRevenue(models.Model):
     _name = "crm.monthly.revenue"
     _rec_name = "month"
+    _order = "date asc"
 
     @api.model
     def default_get(self, fields):
@@ -24,40 +25,37 @@ class CrmMonthlyRevenue(models.Model):
                 or datetime.now().strftime("%Y-%m-%d")
             )
             if latest_revenue_date:
-                latest_revenue_date = datetime.strptime(
-                    latest_revenue_date, "%Y-%m-%d"
-                ).date()
                 upcoming_month_end_date = (
                     latest_revenue_date + relativedelta(months=2)
                 ).replace(day=1) - timedelta(days=1)
-                res["date"] = upcoming_month_end_date.strftime("%Y-%m-%d")
-                res["latest_revenue_date"] = latest_revenue_date.strftime("%Y-%m-%d")
+                res["date"] = upcoming_month_end_date
+                res["latest_revenue_date"] = latest_revenue_date
         return res
 
     date = fields.Date("Date", required=True)
-    year = fields.Many2one("date.range", string="Year")
-    month = fields.Many2one("date.range", string="Month")
-    no_of_days = fields.Char(string="Duration")
+    year = fields.Many2one(
+        "date.range", string="Year", compute="_compute_date_fields", store=True
+    )
+    month = fields.Many2one(
+        "date.range", string="Month", compute="_compute_date_fields", store=True
+    )
+    no_of_days = fields.Char(
+        string="Duration", compute="_compute_date_fields", store=True
+    )
     latest_revenue_date = fields.Date("Latest Revenue Date")
-    weighted_revenue = fields.Float("Weighted Revenue", required=True)
-    expected_revenue = fields.Float("Expected Revenue", required=True)
+    weighted_revenue = fields.Monetary(
+        "Weighted Revenue", compute="_compute_weighted_revenue", store=True
+    )
+    expected_revenue = fields.Monetary("Expected Revenue", required=True)
     percentage = fields.Float(string="Probability")
     lead_id = fields.Many2one(
         "crm.lead", string="Opportunity", ondelete="cascade", required=True
     )
-    company_currency = fields.Many2one(
-        string="Currency",
-        related="lead_id.company_id.currency_id",
-        readonly=True,
-        relation="res.currency",
-        store=True,
+    currency_id = fields.Many2one(
+        related="lead_id.company_currency",
     )
     user_id = fields.Many2one(
         related="lead_id.user_id",
-        relation="res.users",
-        string="Salesperson",
-        index=True,
-        store=True,
     )
     computed_line = fields.Boolean(string="Computed line")
     project_id = fields.Many2one(
@@ -78,39 +76,36 @@ class CrmMonthlyRevenue(models.Model):
     operating_unit_id = fields.Many2one(
         "operating.unit",
         related="lead_id.operating_unit_id",
-        string="Operating Unit",
         store=True,
     )
 
-    def calculate_weighted_revenue(self, percentage):
-        self.ensure_one()
-        weighted_revenue = 0
-        if self.expected_revenue:
-            weighted_revenue = self.expected_revenue * percentage / 100
-        return weighted_revenue
+    @api.depends("expected_revenue", "percentage", "lead_id.probability")
+    def _compute_weighted_revenue(self):
+        for this in self:
+            this.weighted_revenue = this.expected_revenue * this.percentage / 100
 
-    @api.onchange("expected_revenue", "percentage", "lead_id.probability")
-    def onchagne_expected_revenue(self):
+    @api.onchange("lead_id")
+    def onchange_lead_id(self):
         self.percentage = self.lead_id.probability
-        self.weighted_revenue = self.calculate_weighted_revenue(self.percentage)
 
-    @api.onchange("date")
-    def onchange_date(self):
-        ctx = self.env.context.copy()
-        lead_id = ctx.get("default_lead_id")
-        date = datetime.strptime(self.date, "%Y-%m-%d").date()
+    @api.depends("date")
+    def _compute_date_fields(self):
         date_range = self.env["date.range"]
+        for this in self:
+            date = this.date
 
-        if date and self.latest_revenue_date:
-            lrd = datetime.strptime(self.latest_revenue_date, "%Y-%m-%d").date()
-            if date < lrd or (date.month == lrd.month and date.year == lrd.year):
-                date = self.date = (lrd + relativedelta(months=2)).replace(
-                    day=1
-                ) - timedelta(days=1)
+            if date and this.latest_revenue_date:
+                lrd = this.latest_revenue_date
+                if date < lrd or (date.month == lrd.month and date.year == lrd.year):
+                    date = date = (lrd + relativedelta(months=2)).replace(
+                        day=1
+                    ) - timedelta(days=1)
 
-        if date:
+            if not date:
+                continue
+
             days = " days (" if date.day > 1 else " day ("
-            self.no_of_days = (
+            this.no_of_days = (
                 str(date.day)
                 + days
                 + str(1)
@@ -120,27 +115,17 @@ class CrmMonthlyRevenue(models.Model):
                 + str(date.strftime("%B"))
                 + ")"
             )
-            company = self.lead_id.company_id.id or self.env.user.company_id.id
-            common_domian = [
-                ("date_start", "<=", self.date),
-                ("date_end", ">=", self.date),
-                ("company_id", "=", company),
+            company_id = this.lead_id.company_id.id or this.env.user.company_id.id
+            common_domain = [
+                ("date_start", "<=", this.date),
+                ("date_end", ">=", this.date),
+                ("company_id", "=", company_id),
             ]
             month = date_range.search(
-                common_domian + [("type_id.fiscal_month", "=", True)]
+                common_domain + [("type_id.fiscal_month", "=", True)]
             )
-            self.month = month.id
+            this.month = month.id
             year = date_range.search(
-                common_domian + [("type_id.fiscal_year", "=", True)]
+                common_domain + [("type_id.fiscal_year", "=", True)]
             )
-            self.year = year.id
-
-        if lead_id and date:
-            lead = self.env["crm.lead"].browse([lead_id])
-            self.env.cr.execute(
-                """
-                            UPDATE %s SET latest_revenue_date = %s
-                            WHERE id = %s
-                  """,
-                (lead._table, date, lead_id),
-            )
+            this.year = year.id
