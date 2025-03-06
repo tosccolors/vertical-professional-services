@@ -21,5 +21,5 @@ class TestPsCrm(TransactionCase):
             lead_form.operating_unit_id = operating_unit
             lead_form.expected_revenue = 42000
             lead_form.probability = 50
-            lead_form.start_date = "2025-01-01"
-            lead_form.end_date = "2025-06-30"
+            lead_form.start_date = "2024-01-01"
+            lead_form.end_date = "2024-06-30"
