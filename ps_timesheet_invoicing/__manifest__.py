@@ -74,7 +74,6 @@
         "demo/product_product.xml",
         "demo/account_analytic_account.xml",
         "demo/account_analytic_line.xml",
-        "demo/date_range.xml",
         "demo/fleet_vehicle_odometer.xml",
         "demo/hr_department.xml",
         "demo/hr_employee.xml",

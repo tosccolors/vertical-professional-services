@@ -33,6 +33,7 @@
         "views/menu.xml",
     ],
     "demo": [
+        "demo/date_range.xml",
         "demo/hr_department.xml",
         "demo/res_partner.xml",
     ],
