@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+    <function model="date.range.generator" name="action_apply">
+        <function
+            model="date.range.generator"
+            name="create"
+            eval="[{
+                'type_id': ref('ps_timesheet_invoicing.date_range_quarter'),
+                'date_start': '2023-01-01',
+                'date_end': '2024-12-31',
+                'unit_of_time': '1',
+                'duration_count': 3,
+                'count': 8,
+                'name_prefix': 'Quarter ',
+            }]"
+        />
+    </function>
+</odoo>
