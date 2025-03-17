@@ -43,6 +43,7 @@
         "security/ir.model.access.csv",
         "wizard/time_line_invoice.xml",
         "wizard/change_chargecode_view.xml",
+        "wizard/ps_reset_overtime.xml",
         "wizard/hr_employee_wizard.xml",
         "report/hr_chargeability_report.xml",
         "report/report_invoice.xml",
