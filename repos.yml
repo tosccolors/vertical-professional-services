@@ -117,7 +117,7 @@ misc:
   remotes:
     tosccolors: https://github.com/tosccolors/misc
   merges:
-    - tosccolors 16.0
+    - tosccolors 16.0-test
     # operating_unit_report_layout
     - tosccolors refs/pull/240/head
 ../src:
