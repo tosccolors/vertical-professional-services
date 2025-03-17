@@ -22,10 +22,6 @@ class PsPlanningDepartmentMixin(models.AbstractModel):
         if view_type == "search":
             arch = etree.fromstring(result["arch"])
             for node in arch.xpath("//search"):
-                etree.SubElement(
-                    node,
-                    "separator",
-                )
                 departments = (
                     self.env["hr.department"]
                     .search([])
@@ -37,28 +33,52 @@ class PsPlanningDepartmentMixin(models.AbstractModel):
                         )
                     )
                 )
-                for department in departments:
+                field_names = [
+                    field_name
+                    for field_name in ("project_id", "employee_id")
+                    if field_name in self._fields
+                ]
+                for field_name in field_names:
+                    field = self.env["ir.model.fields"]._get(self._name, field_name)
                     etree.SubElement(
                         node,
-                        "filter",
-                        attrib={
-                            "string": department.name
-                            if not (
-                                departments.filtered(
-                                    lambda x: x.id != department.id
-                                    and x.name == department.name
-                                )
-                            )
-                            else "%s (%s)"
-                            % (
-                                department.name,
-                                department.parent_id.name or department.company_id.name,
-                            ),
-                            "domain": json.dumps(
-                                [("project_id.department_id", "=", department.id)]
-                            ),
-                        },
+                        "separator",
                     )
+                    prefix = ""
+                    if field_name != "project_id":
+                        prefix = "%s: " % field.field_description
+                    for department in departments:
+                        etree.SubElement(
+                            node,
+                            "filter",
+                            attrib={
+                                "string": prefix
+                                + (
+                                    department.name
+                                    if not (
+                                        departments.filtered(
+                                            lambda x: x.id != department.id
+                                            and x.name == department.name
+                                        )
+                                    )
+                                    else "%s (%s)"
+                                    % (
+                                        department.name,
+                                        department.parent_id.name
+                                        or department.company_id.name,
+                                    )
+                                ),
+                                "domain": json.dumps(
+                                    [
+                                        (
+                                            "%s.department_id" % field_name,
+                                            "=",
+                                            department.id,
+                                        ),
+                                    ]
+                                ),
+                            },
+                        )
 
             result["arch"] = etree.tostring(arch)
         return result
