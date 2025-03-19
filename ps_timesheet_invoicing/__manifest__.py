@@ -33,7 +33,7 @@
         # "invoice_line_revenue_distribution_operating_unit",
         "queue_job",
         # TODO: migrate if necessary
-        "account_operating_unit_improv",
+        # "account_operating_unit_improv",
     ],
     "data": [
         "data/account_analytic_tag.xml",

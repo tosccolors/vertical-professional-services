@@ -576,7 +576,7 @@ class PSInvoice(models.Model):
             "analytic_distribution": {account.id: 100 for account in analytic_account},
             "price_unit": price_unit,
             "ps_invoice_id": self.id,
-            "operating_unit_id": user and user.operating_unit_default_get(user.id).id,
+            "operating_unit_id": user and user._get_operating_unit_id().id,
         }
 
     def _prepare_invoice_lines_fixed_amount(self, user_total_lines):
