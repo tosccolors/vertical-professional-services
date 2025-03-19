@@ -49,12 +49,21 @@ class HrEmployee(models.Model):
         ]
 
     def _compute_overtime_hours(self):
+        self.env.cr.execute(
+            """
+            SELECT hr_employee.id, sum(overtime_balanced) FROM
+            hr_employee
+            JOIN
+            overtime_balance_report
+            ON hr_employee.user_id=overtime_balance_report.user_id
+            WHERE hr_employee.id in %s
+            GROUP BY hr_employee.id
+            """,
+            (tuple(self.ids) or (0,),),
+        )
+        this2overtime = dict(self.env.cr.fetchall())
         for this in self:
-            this.overtime_hours = sum(
-                self.env["hr_timesheet.sheet"]
-                .search([("employee_id", "=", this.id)])
-                .mapped("overtime_hours")
-            )
+            this.overtime_hours = this2overtime.get(this.id)
 
     def action_view_overtime_entries(self):
         self.ensure_one()
@@ -62,9 +71,9 @@ class HrEmployee(models.Model):
             "ps_timesheet_invoicing.ps_time_line_action"
         )
         ids = (
-            self.env["hr_timesheet.sheet"]
-            .search([("employee_id", "=", self.id)])
-            .mapped("overtime_line_id.id")
+            self.env["overtime.balance.report"]
+            .search([("user_id", "in", self.user_id.ids)])
+            .mapped("id")
         )
         return dict(
             action,
