@@ -106,37 +106,9 @@ class Lead(models.Model):
         self.dept_ou_domain = json.dumps([("id", "in", department_ids)])
 
     @api.model
-    def _onchange_stage_id_values(self, stage_id):
-        """returns the new values when stage_id has changed"""
-        # TODO: delete or fix
-        res = super()._onchange_stage_id_values(stage_id)
-        for rec in self.monthly_revenue_ids:
-            rec.update({"percentage": res.get("probability")})
-        if self.stage_id.show_when_chaing:
-            if self.stage_id.requirements:
-                text = self.stage_id.requirements
-                result = text.split("\n")
-                if result:
-                    final_string = ""
-                    for str_val in result:
-                        final_string += str_val + "</br>"
-                    text = final_string
-                self.env.user.notify_info(message=text, sticky=True)
-        return res
-
-    @api.onchange("operating_unit_id")
-    def onchange_operating_unit_id(self):
-        for record in self.monthly_revenue_split_ids:
-            record.percentage = (
-                100 if record.operating_unit_id == self.operating_unit_id else 0
-            )
-
-    @api.model
     def default_get(self, fields):
         res = super().default_get(fields)
-        context = self._context
-        current_uid = context.get("uid")
-        user = self.env["res.users"].browse(current_uid)
+        user = self.env.user
         res.update({"operating_unit_id": user.default_operating_unit_id.id})
         return res
 
@@ -155,6 +127,9 @@ class Lead(models.Model):
         if not sd or not ed:
             return
 
+        total_expected_revenue = self.prorated_revenue
+        manual_days = 0
+
         for line in self.monthly_revenue_ids.filtered(lambda x: not x.computed_line):
             manual_lines.append(
                 (
@@ -167,6 +142,8 @@ class Lead(models.Model):
                     },
                 )
             )
+            total_expected_revenue -= line.expected_revenue
+            manual_days += (line.month.date_end - line.month.date_start).days + 1
 
         month_end_date = (sd + relativedelta(months=1)).replace(day=1) - timedelta(
             days=1
@@ -174,42 +151,31 @@ class Lead(models.Model):
         if month_end_date > ed:
             month_end_date = ed
         monthly_revenues = []
-        monthly_split_revenues = []
-        total_days = (ed - sd).days + 1
+        total_days = (ed - sd).days + 1 - manual_days
 
         while True:
-            days_per_month = (month_end_date - sd).days + 1
-            expected_revenue_per_month = (
-                self.prorated_revenue * days_per_month / total_days
-            )
-            monthly_revenues_vals = {
-                "date": month_end_date,
-                "latest_revenue_date": month_end_date.replace(day=1)
-                - timedelta(days=1),
-                "expected_revenue": expected_revenue_per_month,
-                "computed_line": True,
-                "percentage": self.probability,
-            }
-            monthly_revenue = self.env["crm.monthly.revenue"].new(monthly_revenues_vals)
-            monthly_revenues.append(
-                (
-                    0,
-                    0,
-                    monthly_revenues_vals,
+            if not any(
+                vals["date"].month == month_end_date.month
+                for _dummy, _dummy, vals in manual_lines
+            ):
+                days_per_month = (month_end_date - sd).days + 1
+                expected_revenue_per_month = self.company_currency.round(
+                    total_expected_revenue * days_per_month / total_days
                 )
-            )
-
-            for ou in self._get_split_operating_units():
-                monthly_split_revenues.append(
+                monthly_revenues_vals = {
+                    "date": month_end_date,
+                    "latest_revenue_date": month_end_date.replace(day=1)
+                    - timedelta(days=1),
+                    "expected_revenue": expected_revenue_per_month,
+                    "computed_line": True,
+                    "percentage": self.probability,
+                }
+                self.env["crm.monthly.revenue"].new(monthly_revenues_vals)
+                monthly_revenues.append(
                     (
                         0,
                         0,
-                        {
-                            "month_id": monthly_revenue.month.id,
-                            "operating_unit_id": ou.id,
-                            "percentage": 100 if ou == self.operating_unit_id else 0,
-                            "expected_revenue": expected_revenue_per_month,
-                        },
+                        monthly_revenues_vals,
                     )
                 )
 
@@ -222,8 +188,38 @@ class Lead(models.Model):
             if month_end_date > ed:
                 month_end_date = ed
 
+        difference_amount = (self.expected_revenue * self.probability / 100) - (
+            sum(
+                vals["expected_revenue"]
+                for _dummy, _dummy, vals in (monthly_revenues + manual_lines)
+            )
+        )
+        if difference_amount and monthly_revenues:
+            monthly_revenues[0][2]["expected_revenue"] += difference_amount
+
         self.monthly_revenue_ids = [(5, 0, [])] + monthly_revenues + manual_lines
-        self.monthly_revenue_split_ids = [(5, 0, [])] + monthly_split_revenues
+        self.monthly_revenue_split_ids = [(5, 0, [])] + [
+            (
+                0,
+                0,
+                {
+                    "month_id": monthly_revenue.month.id,
+                    "operating_unit_id": ou.id,
+                    "percentage": 100 if ou == self.operating_unit_id else 0,
+                    "expected_revenue": monthly_revenue.expected_revenue,
+                },
+            )
+            for monthly_revenue in self.monthly_revenue_ids
+            for ou in self._get_split_operating_units()
+        ]
+
+    def stage_id_changed(self):
+        for this in self:
+            this.monthly_revenue_ids.percentage = this.probability
+
+        if self.stage_id.popup_requirements and self.stage_id.requirements:
+            text = self.stage_id.requirements
+            self.env.user.notify_info(message=text.replace("\n", "<br/>"), sticky=True)
 
     def recalculate_total(self):
         for this in self:
@@ -239,6 +235,17 @@ class Lead(models.Model):
         ):
             self.end_date = self.start_date
         self.update_monthly_revenue()
+
+    @api.onchange("stage_id")
+    def onchange_stage_id(self):
+        self.stage_id_changed()
+
+    @api.onchange("operating_unit_id")
+    def onchange_operating_unit_id(self):
+        for record in self.monthly_revenue_split_ids:
+            record.percentage = (
+                100 if record.operating_unit_id == self.operating_unit_id else 0
+            )
 
     @api.onchange("partner_id")
     def onchange_partner(self):
