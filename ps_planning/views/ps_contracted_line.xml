@@ -37,6 +37,12 @@
                 />
                 <separator />
                 <filter
+                    name="with_value"
+                    string="With value"
+                    domain="[('value', '!=', False), ('value', '!=', 0)]"
+                />
+                <separator />
+                <filter
                     name="invoicing_time_material"
                     string="Time &amp; Material Projects"
                     domain="[('project_id.invoice_properties.actual_time_spent', '=', True)]"
@@ -82,6 +88,8 @@
         <field name="name">Contract Overview</field>
         <field name="res_model">ps.contracted.line</field>
         <field name="view_mode">tree,pivot</field>
-        <field name="context">{'search_default_my': 1}</field>
+        <field name="context">
+            {'search_default_my': 1, 'search_default_with_value': 1}
+        </field>
     </record>
 </odoo>
