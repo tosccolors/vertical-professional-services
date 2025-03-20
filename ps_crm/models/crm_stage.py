@@ -8,4 +8,4 @@ from odoo import fields, models
 class CRMStage(models.Model):
     _inherit = "crm.stage"
 
-    show_when_changing = fields.Boolean("Show when changing")
+    popup_requirements = fields.Boolean("Show when changing")
