@@ -196,7 +196,7 @@
                 <field name="priority" />
                 <field name="probability" />
                 <field name="user_id" string="Owner" />
-                <field name="department_id" string="Practice" />
+                <field name="department_id" string="Business line" />
                 <field name="tag_ids" string="Proposition" />
                 <field name="stage_id" />
             </field>
