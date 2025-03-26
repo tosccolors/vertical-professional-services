@@ -1,7 +1,6 @@
 # Copyright 2018 - 2023 The Open Source Company ((www.tosc.nl).)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import json
 from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
@@ -39,11 +38,6 @@ class Lead(models.Model):
         "lead_id",
         string="Revenue split",
     )
-    dept_ou_domain = fields.Char(
-        compute="_compute_dept_ou_domain",
-        readonly=True,
-        store=False,
-    )
 
     @api.depends("monthly_revenue_ids.date")
     def _compute_latest_revenue_date(self):
@@ -65,42 +59,6 @@ class Lead(models.Model):
             this.show_recalculate_total_button = (
                 this.expected_revenue != this.sum_monthly_revenue
             )
-
-    @api.depends("operating_unit_id")
-    def _compute_dept_ou_domain(self):
-        """
-        Compute the domain for the department domain.
-        """
-        department_ids = []
-        if self.operating_unit_id:
-            self.env.cr.execute(
-                """
-                            SELECT id
-                            FROM hr_department
-                            WHERE operating_unit_id = %s
-                            AND parent_id IS NULL
-                            """,
-                (self.operating_unit_id.id,),
-            )
-
-            result = self.env.cr.fetchall()
-            for res in result:
-                department_id = res[0]
-                self.env.cr.execute(
-                    """
-                    WITH RECURSIVE
-                        subordinates AS(
-                            SELECT id, parent_id  FROM hr_department WHERE id = %s
-                            UNION
-                            SELECT h.id, h.parent_id FROM hr_department h
-                            INNER JOIN subordinates s ON s.id = h.parent_id)
-                        SELECT  *  FROM subordinates""",
-                    (department_id,),
-                )
-                result2 = self.env.cr.fetchall()
-                for res2 in result2:
-                    department_ids.append(res2[0])
-        self.dept_ou_domain = json.dumps([("id", "in", department_ids)])
 
     @api.model
     def default_get(self, fields):

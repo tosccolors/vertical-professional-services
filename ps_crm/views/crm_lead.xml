@@ -73,8 +73,10 @@
                 <attribute name="invisible">True</attribute>
             </field>
             <xpath expr="//field[@name='team_id']" position="after">
-                <field name="dept_ou_domain" invisible="1" />
-                <field name="department_id" domain="dept_ou_domain" />
+                <field
+                    name="department_id"
+                    domain="[('operating_unit_id', '=', operating_unit_id)]"
+                />
             </xpath>
             <xpath expr="//field[@name='team_id']" position="attributes">
                 <attribute name="invisible">1</attribute>
