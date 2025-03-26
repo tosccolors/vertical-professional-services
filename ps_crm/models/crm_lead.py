@@ -21,7 +21,7 @@ class Lead(models.Model):
         "operating.unit", string="Operating Unit", required=True
     )
     contract_signed = fields.Boolean(string="Contract Signed")
-    department_id = fields.Many2one("hr.department", string="Practice")
+    department_id = fields.Many2one("hr.department", string="Business line")
     expected_duration = fields.Integer(string="Expected Duration")
     monthly_revenue_ids = fields.One2many(
         "crm.monthly.revenue", "lead_id", string="Monthly Revenue"
@@ -56,10 +56,7 @@ class Lead(models.Model):
     def _compute_sum_monthly_revenue(self):
         for this in self:
             this.sum_monthly_revenue = this.company_currency.round(
-                sum(
-                    revenue.expected_revenue / revenue.percentage * 100
-                    for revenue in self.monthly_revenue_ids
-                )
+                sum(self.monthly_revenue_ids.mapped("expected_revenue"))
             )
 
     @api.depends("expected_revenue", "sum_monthly_revenue")
@@ -127,7 +124,7 @@ class Lead(models.Model):
         if not sd or not ed:
             return
 
-        total_expected_revenue = self.prorated_revenue
+        total_expected_revenue = self.expected_revenue
         manual_days = 0
 
         for line in self.monthly_revenue_ids.filtered(lambda x: not x.computed_line):
@@ -188,7 +185,7 @@ class Lead(models.Model):
             if month_end_date > ed:
                 month_end_date = ed
 
-        difference_amount = (self.expected_revenue * self.probability / 100) - (
+        difference_amount = self.expected_revenue - (
             sum(
                 vals["expected_revenue"]
                 for _dummy, _dummy, vals in (monthly_revenues + manual_lines)

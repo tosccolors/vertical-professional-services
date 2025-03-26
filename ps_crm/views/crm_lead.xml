@@ -53,7 +53,7 @@
                             <field name="weighted_revenue" readonly="1" sum="Total" />
                             <field name="expected_revenue" sum="Total" />
                             <field name="currency_id" invisible="True" />
-                            <field name="percentage" />
+                            <field name="percentage" invisible="1" />
                         </tree>
                     </field>
                 </div>
