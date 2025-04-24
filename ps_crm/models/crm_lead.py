@@ -8,6 +8,8 @@ from dateutil.relativedelta import relativedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+from odoo.addons.ps_planning.models.ps_contracted_line import _get_work_days_dates
+
 
 class Lead(models.Model):
     _inherit = "crm.lead"
@@ -38,6 +40,12 @@ class Lead(models.Model):
         "lead_id",
         string="Revenue split",
     )
+    user_name = fields.Char(related="user_id.name")
+    lead_employee_ids = fields.One2many(
+        "crm.lead.employee", "lead_id", string="Employees"
+    )
+    first_employee_name = fields.Char(compute="_compute_first_employee_name")
+    docs_link = fields.Char("Link to documentation")
 
     @api.depends("monthly_revenue_ids.date")
     def _compute_latest_revenue_date(self):
@@ -60,12 +68,24 @@ class Lead(models.Model):
                 this.expected_revenue != this.sum_monthly_revenue
             )
 
+    @api.depends("lead_employee_ids")
+    def _compute_first_employee_name(self):
+        for this in self:
+            this.first_employee_name = this.lead_employee_ids[:1].employee_id.name
+
     @api.model
     def default_get(self, fields):
         res = super().default_get(fields)
         user = self.env.user
         res.update({"operating_unit_id": user.default_operating_unit_id.id})
         return res
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        result = super().create(vals_list)
+        for this in result:
+            this.update_monthly_revenue()
+        return result
 
     def _get_split_operating_units(self):
         return self.env["operating.unit"].search(
@@ -98,7 +118,9 @@ class Lead(models.Model):
                 )
             )
             total_expected_revenue -= line.expected_revenue
-            manual_days += (line.month.date_end - line.month.date_start).days + 1
+            manual_days += _get_work_days_dates(
+                line.month.date_start, line.month.date_end
+            )
 
         month_end_date = (sd + relativedelta(months=1)).replace(day=1) - timedelta(
             days=1
@@ -106,14 +128,14 @@ class Lead(models.Model):
         if month_end_date > ed:
             month_end_date = ed
         monthly_revenues = []
-        total_days = (ed - sd).days + 1 - manual_days
+        total_days = _get_work_days_dates(sd, ed) - manual_days
 
         while True:
             if not any(
                 vals["date"].month == month_end_date.month
                 for _dummy, _dummy, vals in manual_lines
             ):
-                days_per_month = (month_end_date - sd).days + 1
+                days_per_month = _get_work_days_dates(sd, month_end_date)
                 expected_revenue_per_month = self.company_currency.round(
                     total_expected_revenue * days_per_month / total_days
                 )

@@ -5,7 +5,10 @@ from datetime import datetime, timedelta
 
 from dateutil.relativedelta import relativedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
+from odoo.tools.misc import format_date
+
+from odoo.addons.ps_planning.models.ps_contracted_line import _get_work_days_dates
 
 
 class CrmMonthlyRevenue(models.Model):
@@ -40,7 +43,7 @@ class CrmMonthlyRevenue(models.Model):
         "date.range", string="Month", compute="_compute_date_fields", store=True
     )
     no_of_days = fields.Char(
-        string="Duration", compute="_compute_date_fields", store=True
+        string="Work days", compute="_compute_date_fields", store=True
     )
     latest_revenue_date = fields.Date("Latest Revenue Date")
     weighted_revenue = fields.Monetary(
@@ -96,29 +99,6 @@ class CrmMonthlyRevenue(models.Model):
     def _compute_date_fields(self):
         date_range = self.env["date.range"]
         for this in self:
-            date = this.date
-
-            if date and this.latest_revenue_date:
-                lrd = this.latest_revenue_date
-                if date < lrd or (date.month == lrd.month and date.year == lrd.year):
-                    date = date = (lrd + relativedelta(months=2)).replace(
-                        day=1
-                    ) - timedelta(days=1)
-
-            if not date:
-                continue
-
-            days = " days (" if date.day > 1 else " day ("
-            this.no_of_days = (
-                str(date.day)
-                + days
-                + str(1)
-                + "-"
-                + str(date.day)
-                + " "
-                + str(date.strftime("%B"))
-                + ")"
-            )
             company_id = this.lead_id.company_id.id or this.env.user.company_id.id
             common_domain = [
                 ("date_start", "<=", this.date),
@@ -133,3 +113,10 @@ class CrmMonthlyRevenue(models.Model):
                 common_domain + [("type_id.fiscal_year", "=", True)]
             )
             this.year = year.id
+
+            days = _get_work_days_dates(this.date.replace(day=1), this.date)
+            this.no_of_days = _("%d days (1 - %s %s)") % (
+                days,
+                this.date.day,
+                format_date(self.env, this.date, date_format="MMMM"),
+            )
