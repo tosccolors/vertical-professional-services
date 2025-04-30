@@ -14,6 +14,7 @@ from odoo.addons.ps_planning.models.ps_contracted_line import _get_work_days_dat
 class Lead(models.Model):
     _inherit = "crm.lead"
 
+    date_deadline = fields.Date("Deadline submission")
     start_date = fields.Date("Start Date")
     end_date = fields.Date("End Date")
     project_id = fields.Many2one("project.project", string="Project")
@@ -85,6 +86,12 @@ class Lead(models.Model):
         result = super().create(vals_list)
         for this in result:
             this.update_monthly_revenue()
+        return result
+
+    def write(self, vals):
+        result = super().write(vals)
+        for this in self:
+            this.stage_id_changed()
         return result
 
     def _get_split_operating_units(self):
@@ -194,9 +201,11 @@ class Lead(models.Model):
         for this in self:
             this.monthly_revenue_ids.percentage = this.probability
 
-        if self.stage_id.popup_requirements and self.stage_id.requirements:
-            text = self.stage_id.requirements
-            self.env.user.notify_info(message=text.replace("\n", "<br/>"), sticky=True)
+            if this.stage_id.popup_requirements and this.stage_id.requirements:
+                text = this.stage_id.requirements
+                self.env.user.notify_info(
+                    message=text.replace("\n", "<br/>"), sticky=True
+                )
 
     def recalculate_total(self):
         for this in self:
@@ -213,10 +222,6 @@ class Lead(models.Model):
             self.end_date = self.start_date
         self.update_monthly_revenue()
 
-    @api.onchange("stage_id")
-    def onchange_stage_id(self):
-        self.stage_id_changed()
-
     @api.onchange("operating_unit_id")
     def onchange_operating_unit_id(self):
         for record in self.monthly_revenue_split_ids:
@@ -231,7 +236,7 @@ class Lead(models.Model):
             return values
 
         part = self.partner_id
-        addr = self.partner_id.address_get(["delivery", "invoice", "contact"])
+        addr = self.partner_id.address_get(["contact"])
 
         if part.type == "contact":
             contact = self.env["res.partner"].search(
@@ -245,7 +250,7 @@ class Lead(models.Model):
                 contact_id = contact[0]
             else:
                 contact_id = False
-        elif addr["contact"] == addr["default"]:
+        elif addr["contact"] == part.id:
             contact_id = False
         else:
             contact_id = addr["contact"]

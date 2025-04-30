@@ -112,6 +112,22 @@
                     domain="[('is_company', '=', False),('parent_id', '=', partner_id),('type', '=', 'contact')]"
                 />
             </xpath>
+            <xpath
+                expr="//sheet/group/group[@name='lead_partner']/field[@name='partner_id']"
+                position="attributes"
+            >
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </xpath>
+            <xpath
+                expr="//sheet/group/group[@name='opportunity_partner']/field[@name='partner_id']"
+                position="attributes"
+            >
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page
                     string="Revenue Split"
@@ -240,6 +256,9 @@
             </field>
             <field name="partner_id" position="attributes">
                 <attribute name="string">Customer</attribute>
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
             </field>
             <field name="name" position="after">
                 <field name="start_date" />
