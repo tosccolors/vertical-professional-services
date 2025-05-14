@@ -8,13 +8,11 @@ from dateutil.relativedelta import relativedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
-from odoo.addons.ps_planning.models.ps_contracted_line import _get_work_days_dates
-
 
 class Lead(models.Model):
-    _inherit = "crm.lead"
+    _inherit = ["ps.crm.department.mixin", "crm.lead"]
+    _name = "crm.lead"
 
-    date_deadline = fields.Date("Deadline submission")
     start_date = fields.Date("Start Date")
     end_date = fields.Date("End Date")
     project_id = fields.Many2one("project.project", string="Project")
@@ -41,6 +39,7 @@ class Lead(models.Model):
         "lead_id",
         string="Revenue split",
     )
+    user_id = fields.Many2one(string="Owner")
     user_name = fields.Char(related="user_id.name")
     lead_employee_ids = fields.One2many(
         "crm.lead.employee", "lead_id", string="Employees"
@@ -101,6 +100,12 @@ class Lead(models.Model):
             ]
         )
 
+    def _date_diff_days(self, date_start, date_end):
+        """
+        Allow other modules to ie use work days instead of calendar days
+        """
+        return (date_end - date_start).days + 1
+
     def update_monthly_revenue(self):
         self.ensure_one()
         manual_lines = []
@@ -125,7 +130,7 @@ class Lead(models.Model):
                 )
             )
             total_expected_revenue -= line.expected_revenue
-            manual_days += _get_work_days_dates(
+            manual_days += self._date_diff_days(
                 line.month.date_start, line.month.date_end
             )
 
@@ -135,14 +140,14 @@ class Lead(models.Model):
         if month_end_date > ed:
             month_end_date = ed
         monthly_revenues = []
-        total_days = _get_work_days_dates(sd, ed) - manual_days
+        total_days = self._date_diff_days(sd, ed) - manual_days
 
         while True:
             if not any(
                 vals["date"].month == month_end_date.month
                 for _dummy, _dummy, vals in manual_lines
             ):
-                days_per_month = _get_work_days_dates(sd, month_end_date)
+                days_per_month = self._date_diff_days(sd, month_end_date)
                 expected_revenue_per_month = self.company_currency.round(
                     total_expected_revenue * days_per_month / total_days
                 )

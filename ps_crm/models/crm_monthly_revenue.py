@@ -8,10 +8,9 @@ from dateutil.relativedelta import relativedelta
 from odoo import _, api, fields, models
 from odoo.tools.misc import format_date
 
-from odoo.addons.ps_planning.models.ps_contracted_line import _get_work_days_dates
-
 
 class CrmMonthlyRevenue(models.Model):
+    _inherit = "ps.crm.department.mixin"
     _name = "crm.monthly.revenue"
     _rec_name = "month"
     _order = "date asc"
@@ -114,7 +113,9 @@ class CrmMonthlyRevenue(models.Model):
             )
             this.year = year.id
 
-            days = _get_work_days_dates(this.date.replace(day=1), this.date)
+            days = self.env["crm.lead"]._date_diff_days(
+                this.date.replace(day=1), this.date
+            )
             this.no_of_days = _("%d days (1 - %s %s)") % (
                 days,
                 this.date.day,
