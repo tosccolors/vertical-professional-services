@@ -48,7 +48,7 @@
                         context="{'group_by':'lead_operating_unit_id'}"
                     />
                     <filter
-                        string="Practice"
+                        string="Business line"
                         name='department_id'
                         context="{'group_by':'department_id'}"
                     />

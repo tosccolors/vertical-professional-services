@@ -5,9 +5,12 @@
         <field name="inherit_id" ref="crm.crm_lead_view_form" />
         <field name="arch" type="xml">
             <xpath expr="//group[1]" position="before">
-                <div colspan="2">
-                    <field name="contract_signed" />
+                <div>
+                    <field name="contract_signed" nolabel="1" />
                     <label for="contract_signed" />
+                    <br class="oe_edit_only" />
+                    <label for="docs_link" class="ml-4" />
+                    <field name="docs_link" widget="url" />
                 </div>
                 <field name="show_recalculate_total_button" invisible="1" />
                 <button
@@ -53,10 +56,19 @@
                             <field name="weighted_revenue" readonly="1" sum="Total" />
                             <field name="expected_revenue" sum="Total" />
                             <field name="currency_id" invisible="True" />
-                            <field name="percentage" />
+                            <field name="percentage" invisible="1" />
                         </tree>
                     </field>
                 </div>
+                <group string="Tariffs" name="tariffs">
+                    <field name="lead_employee_ids" nolabel="1">
+                        <tree editable="bottom">
+                            <field name="employee_id" />
+                            <field name="rate" />
+                            <field name="currency_id" invisible="1" />
+                        </tree>
+                    </field>
+                </group>
             </xpath>
             <xpath expr="//field[@name='date_deadline']" position="after">
                 <field name="project_id" />
@@ -73,8 +85,10 @@
                 <attribute name="invisible">True</attribute>
             </field>
             <xpath expr="//field[@name='team_id']" position="after">
-                <field name="dept_ou_domain" invisible="1" />
-                <field name="department_id" domain="dept_ou_domain" />
+                <field
+                    name="department_id"
+                    domain="[('operating_unit_id', '=', operating_unit_id)]"
+                />
             </xpath>
             <xpath expr="//field[@name='team_id']" position="attributes">
                 <attribute name="invisible">1</attribute>
@@ -97,6 +111,22 @@
                     context="{'default_parent_id': partner_id}"
                     domain="[('is_company', '=', False),('parent_id', '=', partner_id),('type', '=', 'contact')]"
                 />
+            </xpath>
+            <xpath
+                expr="//sheet/group/group[@name='lead_partner']/field[@name='partner_id']"
+                position="attributes"
+            >
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </xpath>
+            <xpath
+                expr="//sheet/group/group[@name='opportunity_partner']/field[@name='partner_id']"
+                position="attributes"
+            >
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
             </xpath>
             <xpath expr="//notebook" position="inside">
                 <page
@@ -221,11 +251,23 @@
         <field name="model">crm.lead</field>
         <field name="inherit_id" ref="crm.quick_create_opportunity_form" />
         <field name="arch" type="xml">
+            <field name="partner_id" position="before">
+                <field name="name" position="move" />
+            </field>
+            <field name="partner_id" position="attributes">
+                <attribute name="string">Customer</attribute>
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </field>
+            <field name="name" position="after">
+                <field name="start_date" />
+                <field name="end_date" />
+            </field>
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="operating_unit_id" />
                 <field name="department_id" />
-                <field name="tag_ids" string="Proposition" widget="many2many_tags" />
-                <field name="date_deadline" string="Expected Closing Date" />
+                <field name="date_deadline" />
             </xpath>
             <label for="expected_revenue" position="attributes">
                 <attribute name="string">Expected Revenue + Probability</attribute>
@@ -233,6 +275,12 @@
             <xpath expr="//field[@name='expected_revenue']" position="after">
                 <field name="probability" />
             </xpath>
+            <field name="email_from" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="phone" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
         </field>
     </record>
     <record id="crm.crm_lead_all_leads" model="ir.actions.act_window">

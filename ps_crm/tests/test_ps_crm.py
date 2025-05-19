@@ -34,7 +34,11 @@ class TestPsCrm(TransactionCase):
             self.lead.expected_revenue,
             self.lead.company_currency.round(
                 sum(self.lead.monthly_revenue_ids.mapped("expected_revenue"))
-                * self.lead.probability
-                / 100
             ),
         )
+        self.assertFalse(self.lead.show_recalculate_total_button)
+        february.expected_revenue = 999
+        self.assertTrue(self.lead.show_recalculate_total_button)
+        self.lead.recalculate_total()
+        self.assertFalse(self.lead.show_recalculate_total_button)
+        self.assertEqual(self.lead.expected_revenue, 41999)
