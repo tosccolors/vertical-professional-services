@@ -1,7 +1,6 @@
 # Copyright 2018 - 2023 The Open Source Company ((www.tosc.nl).)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import json
 from datetime import timedelta
 
 from dateutil.relativedelta import relativedelta
@@ -11,7 +10,8 @@ from odoo.exceptions import ValidationError
 
 
 class Lead(models.Model):
-    _inherit = "crm.lead"
+    _inherit = ["ps.crm.department.mixin", "crm.lead"]
+    _name = "crm.lead"
 
     start_date = fields.Date("Start Date")
     end_date = fields.Date("End Date")
@@ -21,7 +21,7 @@ class Lead(models.Model):
         "operating.unit", string="Operating Unit", required=True
     )
     contract_signed = fields.Boolean(string="Contract Signed")
-    department_id = fields.Many2one("hr.department", string="Practice")
+    department_id = fields.Many2one("hr.department", string="Business line")
     expected_duration = fields.Integer(string="Expected Duration")
     monthly_revenue_ids = fields.One2many(
         "crm.monthly.revenue", "lead_id", string="Monthly Revenue"
@@ -39,11 +39,13 @@ class Lead(models.Model):
         "lead_id",
         string="Revenue split",
     )
-    dept_ou_domain = fields.Char(
-        compute="_compute_dept_ou_domain",
-        readonly=True,
-        store=False,
+    user_id = fields.Many2one(string="Owner")
+    user_name = fields.Char(related="user_id.name")
+    lead_employee_ids = fields.One2many(
+        "crm.lead.employee", "lead_id", string="Employees"
     )
+    first_employee_name = fields.Char(compute="_compute_first_employee_name")
+    docs_link = fields.Char("Link to documentation")
 
     @api.depends("monthly_revenue_ids.date")
     def _compute_latest_revenue_date(self):
@@ -56,10 +58,7 @@ class Lead(models.Model):
     def _compute_sum_monthly_revenue(self):
         for this in self:
             this.sum_monthly_revenue = this.company_currency.round(
-                sum(
-                    revenue.expected_revenue / revenue.percentage * 100
-                    for revenue in self.monthly_revenue_ids
-                )
+                sum(self.monthly_revenue_ids.mapped("expected_revenue"))
             )
 
     @api.depends("expected_revenue", "sum_monthly_revenue")
@@ -69,41 +68,10 @@ class Lead(models.Model):
                 this.expected_revenue != this.sum_monthly_revenue
             )
 
-    @api.depends("operating_unit_id")
-    def _compute_dept_ou_domain(self):
-        """
-        Compute the domain for the department domain.
-        """
-        department_ids = []
-        if self.operating_unit_id:
-            self.env.cr.execute(
-                """
-                            SELECT id
-                            FROM hr_department
-                            WHERE operating_unit_id = %s
-                            AND parent_id IS NULL
-                            """,
-                (self.operating_unit_id.id,),
-            )
-
-            result = self.env.cr.fetchall()
-            for res in result:
-                department_id = res[0]
-                self.env.cr.execute(
-                    """
-                    WITH RECURSIVE
-                        subordinates AS(
-                            SELECT id, parent_id  FROM hr_department WHERE id = %s
-                            UNION
-                            SELECT h.id, h.parent_id FROM hr_department h
-                            INNER JOIN subordinates s ON s.id = h.parent_id)
-                        SELECT  *  FROM subordinates""",
-                    (department_id,),
-                )
-                result2 = self.env.cr.fetchall()
-                for res2 in result2:
-                    department_ids.append(res2[0])
-        self.dept_ou_domain = json.dumps([("id", "in", department_ids)])
+    @api.depends("lead_employee_ids")
+    def _compute_first_employee_name(self):
+        for this in self:
+            this.first_employee_name = this.lead_employee_ids[:1].employee_id.name
 
     @api.model
     def default_get(self, fields):
@@ -112,12 +80,31 @@ class Lead(models.Model):
         res.update({"operating_unit_id": user.default_operating_unit_id.id})
         return res
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        result = super().create(vals_list)
+        for this in result:
+            this.update_monthly_revenue()
+        return result
+
+    def write(self, vals):
+        result = super().write(vals)
+        for this in self:
+            this.stage_id_changed()
+        return result
+
     def _get_split_operating_units(self):
         return self.env["operating.unit"].search(
             [
                 ("company_id", "=", self.operating_unit_id.company_id.id),
             ]
         )
+
+    def _date_diff_days(self, date_start, date_end):
+        """
+        Allow other modules to ie use work days instead of calendar days
+        """
+        return (date_end - date_start).days + 1
 
     def update_monthly_revenue(self):
         self.ensure_one()
@@ -127,7 +114,7 @@ class Lead(models.Model):
         if not sd or not ed:
             return
 
-        total_expected_revenue = self.prorated_revenue
+        total_expected_revenue = self.expected_revenue
         manual_days = 0
 
         for line in self.monthly_revenue_ids.filtered(lambda x: not x.computed_line):
@@ -143,7 +130,9 @@ class Lead(models.Model):
                 )
             )
             total_expected_revenue -= line.expected_revenue
-            manual_days += (line.month.date_end - line.month.date_start).days + 1
+            manual_days += self._date_diff_days(
+                line.month.date_start, line.month.date_end
+            )
 
         month_end_date = (sd + relativedelta(months=1)).replace(day=1) - timedelta(
             days=1
@@ -151,14 +140,14 @@ class Lead(models.Model):
         if month_end_date > ed:
             month_end_date = ed
         monthly_revenues = []
-        total_days = (ed - sd).days + 1 - manual_days
+        total_days = self._date_diff_days(sd, ed) - manual_days
 
         while True:
             if not any(
                 vals["date"].month == month_end_date.month
                 for _dummy, _dummy, vals in manual_lines
             ):
-                days_per_month = (month_end_date - sd).days + 1
+                days_per_month = self._date_diff_days(sd, month_end_date)
                 expected_revenue_per_month = self.company_currency.round(
                     total_expected_revenue * days_per_month / total_days
                 )
@@ -188,7 +177,7 @@ class Lead(models.Model):
             if month_end_date > ed:
                 month_end_date = ed
 
-        difference_amount = (self.expected_revenue * self.probability / 100) - (
+        difference_amount = self.expected_revenue - (
             sum(
                 vals["expected_revenue"]
                 for _dummy, _dummy, vals in (monthly_revenues + manual_lines)
@@ -217,9 +206,11 @@ class Lead(models.Model):
         for this in self:
             this.monthly_revenue_ids.percentage = this.probability
 
-        if self.stage_id.popup_requirements and self.stage_id.requirements:
-            text = self.stage_id.requirements
-            self.env.user.notify_info(message=text.replace("\n", "<br/>"), sticky=True)
+            if this.stage_id.popup_requirements and this.stage_id.requirements:
+                text = this.stage_id.requirements
+                self.env.user.notify_info(
+                    message=text.replace("\n", "<br/>"), sticky=True
+                )
 
     def recalculate_total(self):
         for this in self:
@@ -236,10 +227,6 @@ class Lead(models.Model):
             self.end_date = self.start_date
         self.update_monthly_revenue()
 
-    @api.onchange("stage_id")
-    def onchange_stage_id(self):
-        self.stage_id_changed()
-
     @api.onchange("operating_unit_id")
     def onchange_operating_unit_id(self):
         for record in self.monthly_revenue_split_ids:
@@ -254,7 +241,7 @@ class Lead(models.Model):
             return values
 
         part = self.partner_id
-        addr = self.partner_id.address_get(["delivery", "invoice", "contact"])
+        addr = self.partner_id.address_get(["contact"])
 
         if part.type == "contact":
             contact = self.env["res.partner"].search(
@@ -268,7 +255,7 @@ class Lead(models.Model):
                 contact_id = contact[0]
             else:
                 contact_id = False
-        elif addr["contact"] == addr["default"]:
+        elif addr["contact"] == part.id:
             contact_id = False
         else:
             contact_id = addr["contact"]

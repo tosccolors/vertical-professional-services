@@ -24,7 +24,7 @@
                             <field
                                 name="department_id"
                                 readonly="1"
-                                string="Practice"
+                                string="Business line"
                             />
                         </group>
                     </group>
@@ -45,7 +45,7 @@
                 <field name="month" />
                 <field name="no_of_days" />
                 <field name="project_id" />
-                <field name="department_id" string="Practice" />
+                <field name="department_id" string="Business line" />
                 <field name="weighted_revenue" />
                 <field name="expected_revenue" />
                 <field name="percentage" widget="integer" />
