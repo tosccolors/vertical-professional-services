@@ -514,7 +514,7 @@ class PSInvoice(models.Model):
     def write(self, vals):
         if "invoice_line_ids" in vals:
             vals = dict(vals)
-            edit_commands = filter(lambda x: x[0] == 1, vals["invoice_line_ids"])
+            edit_commands = list(filter(lambda x: x[0] == 1, vals["invoice_line_ids"]))
             vals["invoice_line_ids"] = list(
                 filter(lambda x: x[0] != 1, vals["invoice_line_ids"])
             )
@@ -688,7 +688,7 @@ class PSInvoice(models.Model):
             ]
 
         if invoice_lines:
-            self.write({"invoice_line_ids": invoice_lines})
+            self.invoice_id.write({"invoice_line_ids": invoice_lines})
 
         if self.state == "draft" and ptl_from_summary:
             self.state = "open"
