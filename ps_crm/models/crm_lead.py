@@ -181,13 +181,19 @@ class Lead(models.Model):
                 common_domain = [
                     ("date_start", "<=", month_end_date),
                     ("date_end", ">=", month_end_date),
+                    "|",
                     ("company_id", "=", company),
+                    ("company_id", "=", False),
                 ]
                 month = date_range.search(
-                    common_domain + [("type_id.fiscal_month", "=", True)]
+                    common_domain + [("type_id.fiscal_month", "=", True)],
+                    order="company_id asc",
+                    limit=1,
                 )
                 year = date_range.search(
-                    common_domain + [("type_id.fiscal_year", "=", True)]
+                    common_domain + [("type_id.fiscal_year", "=", True)],
+                    order="company_id asc",
+                    limit=1,
                 )
                 days_per_month = (month_end_date - sd).days + 1
                 expected_revenue_per_month = (

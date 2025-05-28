@@ -122,17 +122,23 @@ class CrmMonthlyRevenue(models.Model):
                 + ")"
             )
             company = self.lead_id.company_id.id or self.env.user.company_id.id
-            common_domian = [
+            common_domain = [
                 ("date_start", "<=", self.date),
                 ("date_end", ">=", self.date),
+                "|",
                 ("company_id", "=", company),
+                ("company_id", "=", False),
             ]
             month = date_range.search(
-                common_domian + [("type_id.fiscal_month", "=", True)]
+                common_domain + [("type_id.fiscal_month", "=", True)],
+                order="company_id asc",
+                limit=1,
             )
             self.month = month.id
             year = date_range.search(
-                common_domian + [("type_id.fiscal_year", "=", True)]
+                common_domain + [("type_id.fiscal_year", "=", True)],
+                order="company_id asc",
+                limit=1,
             )
             self.year = year.id
 
