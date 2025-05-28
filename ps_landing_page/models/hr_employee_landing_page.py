@@ -136,7 +136,12 @@ class HrEmployeeLandingPage(models.TransientModel):
                 ("type_id", "=", date_range_type_cw_id),
                 ("date_start", "<=", employment_date),
                 ("date_end", ">=", employment_date),
-            ]
+                "|",
+                ("company_id", "=", self.env.company.id),
+                ("company_id", "=", False),
+            ],
+            order="company_id asc",
+            limit=1,
         )
 
     def get_unsubmitted_timesheet(self):

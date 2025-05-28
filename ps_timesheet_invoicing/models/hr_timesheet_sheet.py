@@ -34,7 +34,12 @@ class HrTimesheetSheet(models.Model):
                 ("type_id", "=", date_range_type_cw_id),
                 ("date_start", "<=", employment_date),
                 ("date_end", ">=", employment_date),
-            ]
+                "|",
+                ("company_id", "=", emp_obj.company_id.id),
+                ("company_id", "=", False),
+            ],
+            limit=1,
+            order="company_id asc",
         )
         past_week_domain = [
             ("type_id", "=", date_range_type_cw_id),
@@ -51,8 +56,12 @@ class HrTimesheetSheet(models.Model):
             [
                 ("type_id", "=", date_range_type_cw_id),
                 ("date_start", "=", dt - timedelta(days=dt.weekday())),
+                "|",
+                ("company_id", "=", emp_obj.company_id.id),
+                ("company_id", "=", False),
             ],
             limit=1,
+            order="company_id asc",
         )
 
         if week or past_weeks:
@@ -66,6 +75,9 @@ class HrTimesheetSheet(models.Model):
                         ("id", "not in", logged_weeks),
                         ("type_id", "=", date_range_type_cw_id),
                         ("date_start", ">", dt - timedelta(days=dt.weekday())),
+                        "|",
+                        ("company_id", "=", emp_obj.company_id.id),
+                        ("company_id", "=", False),
                     ],
                     order="date_start",
                     limit=1,
@@ -124,6 +136,9 @@ class HrTimesheetSheet(models.Model):
             ("type_id", "=", date_range_type_cw_id),
             ("active", "=", True),
             ("id", "not in", logged_weeks) if logged_weeks else TRUE_LEAF,
+            "|",
+            ("company_id", "=", self.env.user.employee_id.company_id.id),
+            ("company_id", "=", False),
         ]
 
     def _get_employee_domain(self):

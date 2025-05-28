@@ -25,7 +25,12 @@ class PsPlanningReportWizard(models.TransientModel):
                 ("date_start", "<=", self.reference_date),
                 ("date_end", ">=", self.reference_date),
                 ("type_id", "=", month_type.id),
-            ]
+                "|",
+                ("company_id", "=", self.env.company.id),
+                ("company_id", "=", False),
+            ],
+            order="company_id asc",
+            limit=1,
         )
         uom_hours = self.env.ref("uom.product_uom_hour")
         _get_work_days = ContractedLine._get_work_days_dates

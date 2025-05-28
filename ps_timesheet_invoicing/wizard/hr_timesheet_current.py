@@ -66,8 +66,12 @@ class HrTimesheetCurrentOpen(models.TransientModel):
                 ("type_id.fiscal_month", "=", False),
                 ("date_start", "<=", date),
                 ("date_end", ">=", date),
+                "|",
+                ("company_id", "=", self.env.user.employee_id.company_id.id),
+                ("company_id", "=", False),
             ],
             limit=1,
+            order="company_id asc",
         )
 
         domain = [
