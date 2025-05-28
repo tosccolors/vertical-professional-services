@@ -47,14 +47,21 @@ class PsContractedLine(models.Model):
     )
     planning_line_ids = fields.One2many("ps.planning.line", "contracted_line_id")
 
-    def _get_date_range(self, date_from=None, date_to=None):
-        range_type = self.env.ref("ps_planning.date_range_type_contracted_period")
+    def _get_date_range(self, date_from=None, date_to=None, range_type=None):
+        range_type = range_type or self.env.ref(
+            "ps_planning.date_range_type_contracted_period"
+        )
         return self.env["date.range"].search(
             [
                 ("type_id", "=", range_type.id),
                 ("date_start", "=", date_from or self.date_from),
                 ("date_end", "=", date_to or self.date_to),
-            ]
+                "|",
+                ("company_id", "=", self.env.company.id),
+                ("company_id", "=", False),
+            ],
+            order="company_id asc",
+            limit=1,
         )
 
     def _create_or_assign_date_range(self):
@@ -70,7 +77,12 @@ class PsContractedLine(models.Model):
                             ("date_start", "<=", month_date),
                             ("date_end", ">=", month_date),
                             ("type_id", "=", month_type.id),
-                        ]
+                            "|",
+                            ("company_id", "=", self.env.company.id),
+                            ("company_id", "=", False),
+                        ],
+                        order="company_id asc",
+                        limit=1,
                     ):
                         raise UserError(
                             _(

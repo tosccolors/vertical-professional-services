@@ -127,8 +127,8 @@ class PsPlanningWizard(models.TransientModel):
             dict(
                 {
                     "wizard_id": self.id,
-                    "y_axis": "%10d-%10d-1-%s"
-                    % (task.id, product.id, employee.display_name),
+                    "y_axis": "%s-%s-1-%s"
+                    % (task.display_name, product.display_name, employee.display_name),
                     "y_axis_display": "",
                     "range_id": month.id,
                     "task_id": task.id,
@@ -168,7 +168,7 @@ class PsPlanningWizard(models.TransientModel):
                     task,
                     product,
                     self.env["hr.employee"],
-                    y_axis="%10d-%10d-0" % (task.id, product.id),
+                    y_axis="%s-%s-0" % (task.display_name, product.display_name),
                     days=contracted_days_by_month[date_range]
                     if not planning_line
                     else planning_line.days,
@@ -215,13 +215,14 @@ class PsPlanningWizard(models.TransientModel):
     def _get_months(self, period=None):
         month_type = self.env.ref("account_fiscal_month.date_range_fiscal_month")
         period = period or self.period_id
+        domain = [
+            ("date_end", ">", period.date_start),
+            ("date_start", "<", period.date_end),
+            ("type_id", "=", month_type.id),
+        ]
         return self.env["date.range"].search(
-            [
-                ("date_end", ">", period.date_start),
-                ("date_start", "<", period.date_end),
-                ("type_id", "=", month_type.id),
-            ]
-        )
+            domain + [("company_id", "=", self.env.company.id)],
+        ) or self.env["date.range"].search(domain)
 
 
 class PsPlanningWizardLine(models.TransientModel):
@@ -234,8 +235,8 @@ class PsPlanningWizardLine(models.TransientModel):
     y_axis_display = fields.Char()
     range_id = fields.Many2one("date.range")
     days = fields.Float()
-    planning_line_id = fields.Many2one("ps.planning.line")
-    contracted_line_id = fields.Many2one("ps.contracted.line")
+    planning_line_id = fields.Many2one("ps.planning.line", ondelete="cascade")
+    contracted_line_id = fields.Many2one("ps.contracted.line", ondelete="cascade")
     line_type = fields.Char()
     state = fields.Char()
     task_id = fields.Many2one("project.task")

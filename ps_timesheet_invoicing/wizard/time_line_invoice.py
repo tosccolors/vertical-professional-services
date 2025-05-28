@@ -85,8 +85,7 @@ class TimeLineStatus(models.TransientModel):
                 if link_project:
                     project = self.env["project.project"].browse(res[4])
                     project_id = project.id
-                    # partner_id = project._get_invoice_partner().id
-                    partner_id = project.partner_id.id
+                    partner_id = project._get_invoice_partner().id
 
                 search_domain = [
                     ("partner_id", "=", partner_id),
@@ -291,8 +290,9 @@ class TimeLineStatus(models.TransientModel):
             {
                 "debit": 0.0,
                 "credit": amount,
-                # todo also the category properties
-                "account_id": line.product_id.property_account_income_id.id,
+                "account_id": line.product_id.property_account_income_id.id
+                or line.product_id.categ_id.property_account_income_categ_id.id,
+                "analytic_distribution": {line.account_id.id: 100},
             }
         )
         res.append(move_line_credit)

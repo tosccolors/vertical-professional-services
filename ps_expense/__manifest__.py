@@ -12,10 +12,12 @@
         # TODO migrate
         # "invoice_line_revenue_distribution_operating_unit",
         "sale_expense",
+        "ps_timesheet_invoicing",
     ],
     "data": [
         "security/ir_rule.xml",
         "security/ps_expense.xml",
+        "views/account_move_line.xml",
         "views/hr_expense.xml",
         "views/hr_expense_sheet.xml",
         "views/res_company_view.xml",

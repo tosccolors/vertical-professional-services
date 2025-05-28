@@ -92,9 +92,10 @@ class PSInvoice(models.Model):
             self.task_user_ids = [(6, 0, task_user_ids)]
         else:
             self.task_user_ids = [(6, 0, [])]
-        # add user_total_lines already present in the invoice
+        # add user_total_lines already present in the invoice if they still have lines
         for total_line in user_total_invoiced_lines:
-            user_total_data.append((4, total_line.id))
+            if total_line.detail_ids:
+                user_total_data.append((4, total_line.id))
         self.user_total_ids = user_total_data
         if self.invoice_properties.actual_expenses and self.period_id:
             expense_domain = self._get_expense_line_ids_domain()
@@ -513,7 +514,7 @@ class PSInvoice(models.Model):
     def write(self, vals):
         if "invoice_line_ids" in vals:
             vals = dict(vals)
-            edit_commands = filter(lambda x: x[0] == 1, vals["invoice_line_ids"])
+            edit_commands = list(filter(lambda x: x[0] == 1, vals["invoice_line_ids"]))
             vals["invoice_line_ids"] = list(
                 filter(lambda x: x[0] != 1, vals["invoice_line_ids"])
             )
@@ -575,6 +576,7 @@ class PSInvoice(models.Model):
             "analytic_distribution": {account.id: 100 for account in analytic_account},
             "price_unit": price_unit,
             "ps_invoice_id": self.id,
+            "operating_unit_id": user and user._get_operating_unit_id().id,
         }
 
     def _prepare_invoice_lines_fixed_amount(self, user_total_lines):
@@ -603,6 +605,7 @@ class PSInvoice(models.Model):
                     "quantity": 1,
                     "price_unit": -sum(self.expense_line_ids.mapped("amount")),
                     "ps_analytic_line_ids": [(6, 0, self.expense_line_ids.ids)],
+                    "operating_unit_id": self.operating_unit_id.id,
                 }
             ]
             if sum(self.expense_line_ids.mapped("amount"))
@@ -685,7 +688,7 @@ class PSInvoice(models.Model):
             ]
 
         if invoice_lines:
-            self.write({"invoice_line_ids": invoice_lines})
+            self.invoice_id.write({"invoice_line_ids": invoice_lines})
 
         if self.state == "draft" and ptl_from_summary:
             self.state = "open"

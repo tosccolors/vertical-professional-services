@@ -63,6 +63,7 @@ class TestPsInvoice(TestPsInvoiceBase):
         self.assertTrue(
             all(line.discount for line in ps_invoice.invoice_id.invoice_line_ids)
         )
+        ps_invoice.invoice_id.create_wip_entry = True
         ps_invoice.invoice_id.action_post()
         self.assertEqual(ps_invoice.state, "invoiced")
         self.assertEqual(set(self.ps_line.mapped("state")), {"invoiced"})

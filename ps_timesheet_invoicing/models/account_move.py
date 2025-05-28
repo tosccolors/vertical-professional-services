@@ -29,7 +29,7 @@ class AccountMove(models.Model):
         copy=False,
     )
     create_wip_entry = fields.Boolean(
-        default=True,
+        default=False,
         help="If you uncheck this, no accounting entries will be created to move "
         "the amount into the invoicing period",
     )

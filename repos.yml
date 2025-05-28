@@ -20,6 +20,11 @@ account-payment:
     oca: https://github.com/OCA/account-payment
   merges:
     - oca 16.0
+account-reconcile:
+  remotes:
+    oca: https://github.com/OCA/account-reconcile
+  merges:
+    - oca 16.0
 bank-payment:
   remotes:
     oca: https://github.com/OCA/bank-payment
@@ -118,8 +123,6 @@ misc:
     tosccolors: https://github.com/tosccolors/misc
   merges:
     - tosccolors 16.0-test
-    # operating_unit_report_layout
-    - tosccolors refs/pull/240/head
 ../src:
   defaults:
     depth: 1
