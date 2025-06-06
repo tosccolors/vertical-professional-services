@@ -621,11 +621,16 @@ class PSInvoice(models.Model):
                 self._prepare_invoice_line(
                     product,
                     product.uom_id,
-                    sum(self.mileage_line_ids.mapped("unit_amount")),
-                    self.env["res.users"],
-                    self.env["account.analytic.account"],
-                    self.project_id.ps_fixed_amount,
-                ),
+                    sum(
+                        self.mileage_line_ids.filtered(
+                            lambda x: x.user_id == user
+                        ).mapped("unit_amount")
+                    ),
+                    user,
+                    self.account_analytic_ids[:1],
+                    product.lst_price,
+                )
+                for user in self.mileage_line_ids.user_id
             ]
             if sum(self.mileage_line_ids.mapped("unit_amount"))
             else []
