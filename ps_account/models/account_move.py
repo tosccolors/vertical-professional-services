@@ -85,7 +85,9 @@ class AccountMove(models.Model):
                 line.price_unit,
             )
 
-        for line in self.mapped("invoice_line_ids").sorted(key=key_func):
+        for line in self.mapped("invoice_line_ids").sorted(
+            key=lambda x: x.product_id.name or x.name or ""
+        ):
             key = key_func(line)
             if key not in grouped:
                 grouped[key] = line.new(line._cache)
