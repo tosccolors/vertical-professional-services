@@ -1,0 +1,42 @@
+<odoo>
+    <record id="hr_timesheet_line_search" model="ir.ui.view">
+        <field name="model">ps.time.line</field>
+        <field name="priority">99</field>
+        <field
+            name="inherit_id"
+            ref="helpdesk_mgmt_timesheet.hr_timesheet_line_search"
+        />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data />
+        </field>
+    </record>
+    <record id="hr_timesheet_line_tree" model="ir.ui.view">
+        <field name="model">ps.time.line</field>
+        <field name="priority">99</field>
+        <field name="inherit_id" ref="hr_timesheet.timesheet_view_tree_user" />
+        <field name="mode">primary</field>
+        <field name="arch" type="xml">
+            <data />
+        </field>
+    </record>
+    <record
+        id="helpdesk_mgmt_timesheet.helpdesk_timesheet_action"
+        model="ir.actions.act_window"
+    >
+        <field name="res_model">ps.time.line</field>
+        <field name="search_view_id" ref="hr_timesheet_line_search" />
+    </record>
+    <record
+        id="helpdesk_mgmt_timesheet.act_hr_timesheet_line_view_tree"
+        model="ir.actions.act_window.view"
+    >
+        <field name="view_id" ref="hr_timesheet_line_tree" />
+    </record>
+    <record
+        id="helpdesk_mgmt_timesheet.act_hr_timesheet_line_view_form"
+        model="ir.actions.act_window.view"
+    >
+        <field name="view_id" ref="ps_timesheet_invoicing.hr_timesheet_line_form" />
+    </record>
+</odoo>
