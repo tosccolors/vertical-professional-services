@@ -51,6 +51,11 @@ edi:
   merges:
     - oca 16.0
     - oca refs/pull/1091/head
+helpdesk:
+  remotes:
+    oca: https://github.com/OCA/helpdesk
+  merges:
+    - oca 16.0
 hr:
   remotes:
     oca: https://github.com/OCA/hr
