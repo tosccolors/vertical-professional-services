@@ -12,19 +12,20 @@ class TestPsInvoiceBase(TransactionCase):
         cls.ps_invoice = cls._create_ps_invoice()
 
     @classmethod
-    def _create_ps_invoice(cls, generate=True):
+    def _create_ps_invoice(cls, generate=True, lines=None):
+        lines = lines or cls.ps_line
         wizard = (
             cls.env["time.line.status"]
             .with_context(
-                active_id=cls.ps_line[:1].id,
-                active_ids=cls.ps_line.ids,
-                active_model=cls.ps_line._name,
+                active_id=lines[:1].id,
+                active_ids=lines.ids,
+                active_model=lines._name,
             )
             .create({"name": "invoiceable"})
         )
         wizard.ps_invoice_lines()
         ps_invoice = cls.env["ps.invoice"].search(
-            [("user_total_ids.detail_ids", "in", cls.ps_line.ids)]
+            [("user_total_ids.detail_ids", "in", lines.ids)]
         )
         if generate:
             ps_invoice.generate_invoice()
@@ -33,7 +34,7 @@ class TestPsInvoiceBase(TransactionCase):
 
 class TestPsInvoice(TestPsInvoiceBase):
     @classmethod
-    def _create_ps_invoice(cls, generate=True):
+    def _create_ps_invoice(cls, generate=True, lines=None):
         cls.partner_fpos = cls.env["account.fiscal.position"].create(
             {
                 "name": "automatically assigned",
@@ -44,7 +45,7 @@ class TestPsInvoice(TestPsInvoiceBase):
         cls.ps_line += cls.env.ref(
             "ps_timesheet_invoicing.time_line_demo_user_2023_12_18_mileage"
         )
-        return super()._create_ps_invoice(generate=generate)
+        return super()._create_ps_invoice(generate=generate, lines=lines)
 
     def test_01_invoicing(self):
         """Test invocing time lines"""
@@ -102,8 +103,7 @@ class TestPsInvoice(TestPsInvoiceBase):
     def test_03_amend_invoice(self):
         ps_line1, mileage_line = self.ps_line
         ps_line2 = ps_line1.copy({"state": "open"})
-        self.__class__.ps_line = ps_line2
-        ps_invoice = self._create_ps_invoice()
+        ps_invoice = self._create_ps_invoice(lines=ps_line2)
         self.assertEqual(ps_invoice, self.ps_invoice)
         self.assertEqual(ps_invoice.user_total_ids.detail_ids, ps_line1 + ps_line2)
         self.assertEqual(ps_line1.state, "invoice_created")
@@ -120,6 +120,56 @@ class TestPsInvoice(TestPsInvoiceBase):
             with ps_invoice_form.invoice_line_ids.edit(0) as line:
                 line.price_unit = 43
         self.assertEqual(self.ps_invoice.invoice_id.invoice_line_ids[0].price_unit, 43)
+
+    def test_05_delayed_invoice(self):
+        """Test invoicing delayed time lines"""
+        delayed_line = self.env.ref(
+            "ps_timesheet_invoicing.time_line_demo_user_2023_11_18"
+        )
+        wizard = (
+            self.env["time.line.status"].with_context(
+                active_id=delayed_line[:1].id,
+                active_ids=delayed_line[:1].ids,
+                active_model=delayed_line._name,
+            )
+        ).create({})
+
+        with Form(wizard) as wizard_form:
+            wizard_form.name = "delayed"
+            wizard_form.description = "delayed"
+
+        move_max = self.env["account.move"].search([], limit=1, order="id desc")
+        wizard.ps_invoice_lines()
+
+        self.assertEqual(delayed_line.state, "delayed")
+        reversed_move, move = self.env["account.move"].search(
+            [("id", ">", move_max.id)]
+        )
+        self.assertEqual(reversed_move.reversed_entry_id, move)
+        self.assertEqual(move.reversal_move_id, reversed_move)
+
+        self.env["ps.time.line"].run_reconfirmation_process()
+        delayed_line.invalidate_recordset()
+        self.assertEqual(delayed_line.state, "re_confirmed")
+        ps_invoice = self._create_ps_invoice(lines=delayed_line)
+        self.assertFalse(ps_invoice.user_total_ids.filtered(lambda x: not x.detail_ids))
+        self.assertEqual(ps_invoice, self.ps_invoice)
+
+        ps_invoice.delete_invoice()
+        ps_invoice.generate_invoice()
+
+        # 2 for time lines from different months, 1 expense, 1 mileage
+        self.assertEqual(len(ps_invoice.invoice_id.invoice_line_ids), 4)
+
+        ps_invoice.create_wip_entry = True
+        ps_invoice.invoice_id.action_post()
+
+        self.assertTrue(ps_invoice.invoice_id.wip_move_id)
+        lines = ps_invoice.invoice_id.wip_move_id.line_ids
+        self.assertItemsEqual(
+            filter(None, lines.mapped("credit")),
+            filter(None, lines.mapped("debit")),
+        )
 
 
 class TestPsInvoiceGrouped(TestPsInvoiceBase):

@@ -249,6 +249,7 @@ class AccountMove(models.Model):
             "date": last_day_month_before,
             "narration": _("WIP Invoicing Posting"),
             "invoice_line_ids": [],
+            "line_ids": [],
             "move_type": "entry",
         }
         wip_move_data = self.copy_data(default)[0]
@@ -263,27 +264,26 @@ class AccountMove(models.Model):
             "expense_depreciation",
             "expense_direct_cost",
         )
-        wip_move_data["line_ids"] = list(
-            filter(
-                lambda x: x[2]["price_unit"] != 0
-                and self.env["account.account"].browse(x[2]["account_id"]).account_type
-                in include_types,
-                wip_move_data["line_ids"],
-            )
-        )
-        for command1, command2, line_data in list(wip_move_data["line_ids"]):
-            wip_line_data = line_data.copy()
+
+        for line in self.line_ids.filtered(
+            lambda x: x.price_unit != 0 and x.account_id.account_type in include_types
+        ):
+            line_data = line.copy_data()[0]
 
             account_id = (
-                self.env["product.product"]
-                .browse(wip_line_data["product_id"] or [])
-                .property_account_wip_id.id
+                line.product_id.property_account_wip_id.id
                 or wip_journal.default_account_id.id
             )
-            if account_id:
-                wip_line_data["account_id"] = account_id
 
-            wip_line_data["price_unit"] = -line_data["price_unit"]
+            wip_line_data = dict(
+                line_data,
+                account_id=account_id or line_data["account_id"],
+                amount_currency=-line.amount_currency,
+                balance=-line.balance,
+            )
 
-            wip_move_data["line_ids"].append((command1, command2, wip_line_data))
+            wip_move_data["line_ids"] += [
+                fields.Command.create(line_data),
+                fields.Command.create(wip_line_data),
+            ]
         return self.create(wip_move_data)

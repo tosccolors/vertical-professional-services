@@ -92,11 +92,12 @@ class PSInvoice(models.Model):
             self.task_user_ids = [(6, 0, task_user_ids)]
         else:
             self.task_user_ids = [(6, 0, [])]
-        # add user_total_lines already present in the invoice if they still have lines
         for total_line in user_total_invoiced_lines:
             if total_line.detail_ids:
                 user_total_data.append((4, total_line.id))
         self.user_total_ids = user_total_data
+        # detail lines might have been moved to new total lines, remove empty ones
+        self.user_total_ids.filtered(lambda x: not x.detail_ids).unlink()
         if self.invoice_properties.actual_expenses and self.period_id:
             expense_domain = self._get_expense_line_ids_domain()
             self.expense_line_ids = [
