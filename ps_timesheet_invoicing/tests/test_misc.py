@@ -226,7 +226,7 @@ class TestMisc(TransactionCase):
 
     def test_recompute_time_line(self):
         """Test recomputation of time lines"""
-        task = self.env.ref("project.project_task_11")
+        task = self.env.ref("project.project_1_task_1")
         time_line = self.env.ref(
             "ps_timesheet_invoicing.time_line_demo_user_2023_12_18"
         )
