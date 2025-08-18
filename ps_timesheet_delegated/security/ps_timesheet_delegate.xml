@@ -1,0 +1,37 @@
+<odoo>
+    <record id="group_hr_timesheet_delegated_approver" model="res.groups">
+        <field name="name">Delegated Approver</field>
+        <field name="category_id" ref="base.module_category_services_timesheets" />
+        <field
+            name="implied_ids"
+            eval="[(4, ref('hr_timesheet.group_hr_timesheet_approver'))]"
+        />
+    </record>
+    <record id="rule_hr_timesheet_approver" model="ir.rule">
+        <field
+            name="name"
+        >Approvers can only see their own and subordinates&apos; timesheets</field>
+        <field
+            name="groups"
+            eval="[(4, ref('hr_timesheet.group_hr_timesheet_approver'))]"
+        />
+        <field name="model_id" ref="hr_timesheet_sheet.model_hr_timesheet_sheet" />
+        <field name="domain_force">
+            ['|', ('employee_id.parent_id.user_id', '=', user.id),
+            ('employee_id.user_id','=',user.id)]
+        </field>
+    </record>
+    <record id="rule_hr_timesheet_delegated_approver" model="ir.rule">
+        <field
+            name="name"
+        >Delegated Approvers can see their subordinates&apos; subordinates&apos; timesheets</field>
+        <field
+            name="groups"
+            eval="[(4, ref('group_hr_timesheet_delegated_approver'))]"
+        />
+        <field name="model_id" ref="hr_timesheet_sheet.model_hr_timesheet_sheet" />
+        <field name="domain_force">
+            [('employee_id.parent_id.parent_id.user_id', '=', user.id)]
+        </field>
+    </record>
+</odoo>

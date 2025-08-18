@@ -1,0 +1,32 @@
+<odoo>
+    <record
+        id="ps_timesheet_invoicing.act_hr_timesheet_sheet_form"
+        model="ir.actions.act_window"
+    >
+        <field name="domain">
+            ['|',('employee_id.parent_id.user_id', '=', uid), ('employee_id.user_id',
+            '=', uid)]
+        </field>
+    </record>
+    <record id="action_hr_timesheet_delegated_approver" model="ir.actions.act_window">
+        <field name="name">Timesheets to Approve (delegated)</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">hr_timesheet.sheet</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_to_approve':1}</field>
+        <field name="domain">
+            [('employee_id.parent_id.parent_id.user_id', '=', uid)]
+        </field>
+        <field
+            name="search_view_id"
+            ref="ps_timesheet_invoicing.view_hr_timesheet_sheet_filter"
+        />
+    </record>
+    <menuitem
+        id="menu_hr_timesheet_delegated_approver"
+        action="action_hr_timesheet_delegated_approver"
+        parent="hr_timesheet.menu_hr_time_tracking"
+        groups="group_hr_timesheet_delegated_approver"
+        sequence="12"
+    />
+</odoo>
