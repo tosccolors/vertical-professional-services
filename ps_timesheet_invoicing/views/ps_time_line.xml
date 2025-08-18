@@ -8,7 +8,6 @@
                 <field name="operating_unit_id" />
                 <field name="project_id" />
                 <field name="task_id" />
-                <field name="timesheet_user"/>
                 <field name="date_of_last_wip" />
                 <field name="week_id" string="Timesheet Week" />
                 <field name="unit_amount" sum="Quantity" optional="show" />
