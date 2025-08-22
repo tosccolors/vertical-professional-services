@@ -22,20 +22,13 @@ class TimeLine(models.Model):
         "project_id.chargeable",
         "project_id.correction_charge",
         "project_id.user_id",
-        "project_id.standard_task_id.task_user_ids",
         "account_id",
         "unit_amount",
         "planned",
         "date",
-        "task_id",
         "user_id",
-        "task_id.task_user_ids",
-        "task_user_id.from_date",
-        "task_user_id.product_id",
-        "task_user_id.fee_rate",
     )
     def _compute_time_line(self):
-        uom_hrs = self.env.ref("uom.product_uom_hour").id
         for line in self:
             # all ps_time lines need a project_operating_unit_id and
             # for all ps_time lines day_name, week_id are computed
@@ -74,14 +67,34 @@ class TimeLine(models.Model):
                 line.wip_month_id = line.month_of_last_wip
             else:
                 line.wip_month_id = var_month_id
+            line.actual_qty = line.unit_amount
+            line.planned_qty = 0.0
+
+    @api.depends(
+        "project_id.user_id",
+        "project_id.standard_task_id.task_user_ids",
+        "unit_amount",
+        "date",
+        "task_id",
+        "user_id",
+        "task_id.task_user_ids",
+        "task_user_id.from_date",
+        "task_user_id.product_id",
+        "task_user_id.fee_rate",
+    )
+    def _compute_time_line_task_user_id(self):
+        uom_hrs = self.env.ref("uom.product_uom_hour").id
+        for line in self:
             task = line.task_id
             date = line.date
+            user = line.user_id
             if (
                 task
                 and date
+                and user
                 and line.product_uom_id.id == uom_hrs
                 and line.state
-                in [
+                in (
                     "new",
                     "draft",
                     "open",
@@ -89,7 +102,7 @@ class TimeLine(models.Model):
                     "invoiceable",
                     "progress",
                     "re_confirmed",
-                ]
+                )
             ):
                 line.task_user_id = self.env["task.user"].get_task_user_obj(
                     task.id, user.id, date
@@ -97,8 +110,6 @@ class TimeLine(models.Model):
                 line.line_fee_rate = line.get_fee_rate()[0]
                 line.amount = line.get_fee_rate_amount()
                 line.product_id = line.get_task_user_product()
-            line.actual_qty = line.unit_amount
-            line.planned_qty = 0.0
 
     @api.model
     def _default_user(self):
@@ -235,7 +246,7 @@ class TimeLine(models.Model):
     )
     employee_id = fields.Many2one("hr.employee", string="Employee")
     line_fee_rate = fields.Float(
-        compute=_compute_time_line,
+        compute=_compute_time_line_task_user_id,
         string="Fee Rate",
         store=True,
     )
@@ -278,7 +289,10 @@ class TimeLine(models.Model):
     date_of_next_reconfirmation = fields.Date("Date Of Next Reconfirmation")
     tag_ids = fields.Boolean("field not used")
     task_user_id = fields.Many2one(
-        "task.user", string="Task User Fee Rate", compute=_compute_time_line, store=True
+        "task.user",
+        string="Task User Fee Rate",
+        compute=_compute_time_line_task_user_id,
+        store=True,
     )
 
     def get_task_user_product(self, task_id=None, user_id=None):
