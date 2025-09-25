@@ -182,6 +182,8 @@ class PsPlanningWizard(models.TransientModel):
                             ("product_id", "=", product.id),
                             ("line_type", "=", "planned"),
                             ("employee_id", "=", employee.id),
+                            ("range_id.date_start", ">=", self.period_id.date_start),
+                            ("range_id.date_start", "<=", self.period_id.date_end),
                         ],
                     ):
                         continue
