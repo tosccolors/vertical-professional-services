@@ -8,6 +8,11 @@ account-financial-tools:
     oca: https://github.com/OCA/account-financial-tools
   merges:
     - oca 14.0
+account-financial-reporting:
+  remotes:
+    oca: https://github.com/OCA/account-financial-reporting
+  merges:
+    - oca 14.0
 account-invoicing:
   remotes:
     oca: https://github.com/OCA/account-invoicing
@@ -113,7 +118,7 @@ misc:
   remotes:
     tosccolors: https://github.com/tosccolors/misc
   merges:
-    - tosccolors 14.0
+    - tosccolors 14.0-test
       # account_operating_unit_improv
     - tosccolors refs/pull/255/head
 ../src:

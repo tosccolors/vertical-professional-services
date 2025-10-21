@@ -108,7 +108,7 @@ class PsPlanningBillingReport(models.Model):
                 ELSE 0
                 END as billed_days,
                 (
-                    select sum(aml.price_total)
+                    select sum(aml.balance)
                     from account_move_line aml
                     join ps_invoice psi on aml.ps_invoice_id=psi.id
                     where

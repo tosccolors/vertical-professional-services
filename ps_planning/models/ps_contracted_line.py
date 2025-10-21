@@ -8,6 +8,31 @@ from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError, ValidationError
 
 
+def _get_work_days_dates(date_start, date_end):
+    start_weekday = date_start.weekday()
+    end_weekday = date_end.weekday()
+    weeks = (
+        (
+            (date_end + relativedelta(weekday=SU))
+            - (
+                date_start
+                + (
+                    relativedelta(weekday=SA)
+                    if start_weekday != 6
+                    else relativedelta(days=-1)
+                )
+            )
+        ).days
+        - 1
+    ) / 7
+    days = weeks * 5
+    if start_weekday < 5:
+        days += 5 - start_weekday
+    if end_weekday < 4:
+        days -= 4 - end_weekday
+    return days
+
+
 class PsContractedLine(models.Model):
     _name = "ps.contracted.line"
     _inherit = "ps.planning.department.mixin"
@@ -47,14 +72,21 @@ class PsContractedLine(models.Model):
     )
     planning_line_ids = fields.One2many("ps.planning.line", "contracted_line_id")
 
-    def _get_date_range(self, date_from=None, date_to=None):
-        range_type = self.env.ref("ps_planning.date_range_type_contracted_period")
+    def _get_date_range(self, date_from=None, date_to=None, range_type=None):
+        range_type = range_type or self.env.ref(
+            "ps_planning.date_range_type_contracted_period"
+        )
         return self.env["date.range"].search(
             [
                 ("type_id", "=", range_type.id),
                 ("date_start", "=", date_from or self.date_from),
                 ("date_end", "=", date_to or self.date_to),
-            ]
+                "|",
+                ("company_id", "=", self.env.company.id),
+                ("company_id", "=", False),
+            ],
+            order="company_id asc",
+            limit=1,
         )
 
     def _create_or_assign_date_range(self):
@@ -70,7 +102,12 @@ class PsContractedLine(models.Model):
                             ("date_start", "<=", month_date),
                             ("date_end", ">=", month_date),
                             ("type_id", "=", month_type.id),
-                        ]
+                            "|",
+                            ("company_id", "=", self.env.company.id),
+                            ("company_id", "=", False),
+                        ],
+                        order="company_id asc",
+                        limit=1,
                     ):
                         raise UserError(
                             _(
@@ -222,25 +259,4 @@ class PsContractedLine(models.Model):
         return self._get_work_days_dates(period.date_start, period.date_end)
 
     def _get_work_days_dates(self, date_start, date_end):
-        start_weekday = date_start.weekday()
-        end_weekday = date_end.weekday()
-        weeks = (
-            (
-                (date_end + relativedelta(weekday=SU))
-                - (
-                    date_start
-                    + (
-                        relativedelta(weekday=SA)
-                        if start_weekday != 6
-                        else relativedelta(days=-1)
-                    )
-                )
-            ).days
-            - 1
-        ) / 7
-        days = weeks * 5
-        if start_weekday < 5:
-            days += 5 - start_weekday
-        if end_weekday < 4:
-            days -= 4 - end_weekday
-        return days
+        return _get_work_days_dates(date_start, date_end)
