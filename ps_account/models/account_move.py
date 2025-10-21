@@ -99,7 +99,9 @@ class AccountMove(models.Model):
                 ("type", "=", "bank"),
             ]
         )
-        return bank_accs
+        return (
+            bank_accs.filtered(lambda x: x.currency_id == self.currency_id) or bank_accs
+        )
 
     @api.model
     def _get_first_invoice_fields(self, invoice):
