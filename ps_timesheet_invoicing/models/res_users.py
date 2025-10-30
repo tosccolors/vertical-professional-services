@@ -10,15 +10,7 @@ class ResUsers(models.Model):
     _inherit = "res.users"
 
     def _get_related_employees(self):
-        self.ensure_one()
-        ctx = dict(self.env.context)
-        if "thread_model" in ctx:
-            ctx["thread_model"] = "hr.employee"
-        return (
-            self.env["hr.employee"]
-            .with_context(ctx)
-            .search([("user_id", "=", self.id)])
-        )
+        return self.with_context(active_test=False).employee_id
 
     def _get_operating_unit_id(self):
         """Compute Operating Unit of Employee based on the OU in the

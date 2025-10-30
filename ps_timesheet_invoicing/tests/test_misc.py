@@ -223,3 +223,47 @@ class TestMisc(TransactionCase):
         vehicle1.write({"driver_id": False})
         self.assertEqual(len(vehicle1.fleet_vehicle_driver_ids), 1)
         self.assertFalse(vehicle1.driver_id)
+
+    def test_recompute_time_line(self):
+        """Test recomputation of time lines"""
+        task = self.env.ref("project.project_1_task_1")
+        time_line = self.env.ref(
+            "ps_timesheet_invoicing.time_line_demo_user_2023_12_18"
+        )
+        line_fee_rate = time_line.line_fee_rate
+        task_user_data = task.task_user_ids.copy_data()[0]
+
+        task.task_user_ids.fee_rate *= 2
+        self.assertEqual(time_line.line_fee_rate, 2 * line_fee_rate)
+
+        standard_task = self.env["project.task"].create(
+            {
+                "name": "standard task",
+                "project_id": task.project_id.id,
+                "standard": True,
+                "task_user_ids": [(0, 0, task_user_data)],
+            }
+        )
+        task.task_user_ids.unlink()
+        self.assertEqual(time_line.line_fee_rate, line_fee_rate)
+
+        time_line.user_id.employee_id.active = False
+        new_product = standard_task.task_user_ids.product_id.copy()
+        task.write(
+            {
+                "task_user_ids": [
+                    (
+                        0,
+                        0,
+                        dict(
+                            task_user_data,
+                            fee_rate=2 * line_fee_rate,
+                            product_id=new_product.id,
+                        ),
+                    )
+                ],
+            }
+        )
+        task.flush()
+        self.assertEqual(time_line.line_fee_rate, 2 * line_fee_rate)
+        self.assertEqual(time_line.product_id, new_product)
