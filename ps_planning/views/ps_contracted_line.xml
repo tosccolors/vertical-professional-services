@@ -43,6 +43,17 @@
                 />
                 <separator />
                 <filter
+                    name="current"
+                    string="Current"
+                    domain="[('range_id.date_start', '&lt;=', today), ('range_id.date_end', '&gt;=', today)]"
+                />
+                <filter
+                    name="future"
+                    string="Future"
+                    domain="[('range_id.date_start', '&gt;=', today)]"
+                />
+                <separator />
+                <filter
                     name="invoicing_time_material"
                     string="Time &amp; Material Projects"
                     domain="[('project_id.invoice_properties.actual_time_spent', '=', True)]"
@@ -89,7 +100,8 @@
         <field name="res_model">ps.contracted.line</field>
         <field name="view_mode">tree,pivot</field>
         <field name="context">
-            {'search_default_my': 1, 'search_default_with_value': 1}
+            {'search_default_my': 1, 'search_default_with_value': 1,
+            'search_default_current': 1, 'search_default_future': 1}
         </field>
     </record>
 </odoo>
