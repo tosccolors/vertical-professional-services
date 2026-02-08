@@ -439,7 +439,9 @@ class HrTimesheetSheet(models.Model):
                     [
                         ("date", "=", date),
                         ("sheet_id", "=", self.id),
+                        "|",
                         ("task_id.standby", "=", False),
+                        ("task_id", "=", False),
                     ]
                 )
                 .mapped("unit_amount")
