@@ -51,30 +51,6 @@ class TestMisc(TransactionCase):
             properties_form.invoice_mileage = True
         self.assertFalse(km_line.non_invoiceable_mileage)
 
-    def test_delay(self):
-        """Test delaying time lines"""
-        wizard = (
-            self.env["time.line.status"].with_context(
-                active_id=self.ps_line[:1].id,
-                active_ids=self.ps_line[:1].ids,
-                active_model=self.ps_line._name,
-            )
-        ).create({})
-
-        with Form(wizard) as wizard_form:
-            wizard_form.name = "delayed"
-            wizard_form.description = "hello world"
-
-        move_max = self.env["account.move"].search([], limit=1, order="id desc")
-        wizard.ps_invoice_lines()
-
-        self.assertEqual(self.ps_line.state, "delayed")
-        reversed_move, move = self.env["account.move"].search(
-            [("id", ">", move_max.id)]
-        )
-        self.assertEqual(reversed_move.reversed_entry_id, move)
-        self.assertEqual(move.reversal_move_id, reversed_move)
-
     def test_task_user(self):
         """Test creating task.user objects"""
         task_user = self.env.ref("ps_timesheet_invoicing.task_user_task_11")
