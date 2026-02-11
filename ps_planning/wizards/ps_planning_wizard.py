@@ -147,7 +147,6 @@ class PsPlanningWizard(models.TransientModel):
     def action_start_planning(self):
         PsPlanningLine = self.env["ps.planning.line"]
         months = self._get_months()
-        employees = self.env["hr.employee"].search([])
         self.line_ids.unlink()
 
         for contracted_line in self.contracted_line_ids:
@@ -175,18 +174,23 @@ class PsPlanningWizard(models.TransientModel):
                     planning_line_id=planning_line.id,
                     line_type="contracted",
                 )
+
+                employee_groups = PsPlanningLine.read_group(
+                    [
+                        ("task_id", "=", task.id),
+                        ("product_id", "=", product.id),
+                        ("line_type", "=", "planned"),
+                        ("range_id.date_start", ">=", self.period_id.date_start),
+                        ("range_id.date_start", "<=", self.period_id.date_end),
+                    ],
+                    ["employee_id"],
+                    ["employee_id"],
+                )
+                employees = self.env["hr.employee"].browse(
+                    [group["employee_id"][0] for group in employee_groups]
+                )
+
                 for employee in employees:
-                    if not PsPlanningLine.search_count(
-                        [
-                            ("task_id", "=", task.id),
-                            ("product_id", "=", product.id),
-                            ("line_type", "=", "planned"),
-                            ("employee_id", "=", employee.id),
-                            ("range_id.date_start", ">=", self.period_id.date_start),
-                            ("range_id.date_start", "<=", self.period_id.date_end),
-                        ],
-                    ):
-                        continue
                     self._add_line(date_range, task, product, employee)
 
         action = self.env["ir.actions.actions"]._for_xml_id(
