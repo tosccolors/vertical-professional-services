@@ -754,7 +754,7 @@ class PSInvoice(models.Model):
                 ON temp.project_id = pp.id
             WHERE prop.specs_invoice_report = TRUE
             """,
-            (tuple(analytic_obj.ids),),
+            (tuple(analytic_obj.ids or [None]),),
         )
 
         grp_data = self.env.cr.fetchall()
