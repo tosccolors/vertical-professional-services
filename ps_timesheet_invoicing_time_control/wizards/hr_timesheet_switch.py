@@ -10,6 +10,11 @@ class HrTimesheetSwitch(models.TransientModel):
     analytic_line_id = fields.Many2one(comodel_name="ps.time.line")
     running_timer_id = fields.Many2one(comodel_name="ps.time.line")
 
+    def _prepare_copy_values(self, record):
+        result = super()._prepare_copy_values(record)
+        result["date"] = record.date_time.date()
+        return result
+
     @api.model
     def _default_running_timer_id(self, employee=None):
         with self.env["ps.time.line"]._as_analytic_line(self):
