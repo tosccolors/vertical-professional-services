@@ -14,12 +14,13 @@ class PsPlanningLine(models.Model):
         [("contracted", "Contracted"), ("planned", "Planned")],
         default="planned",
         required=True,
+        index=True,
     )
     state = fields.Selection([("draft", "Draft"), ("final", "Final")], default="draft")
-    range_id = fields.Many2one("date.range", string="Period", required=True)
-    task_id = fields.Many2one("project.task", required=True)
-    product_id = fields.Many2one("product.product", required=True)
-    employee_id = fields.Many2one("hr.employee")
+    range_id = fields.Many2one("date.range", string="Period", required=True, index=True)
+    task_id = fields.Many2one("project.task", required=True, index=True)
+    product_id = fields.Many2one("product.product", required=True, index=True)
+    employee_id = fields.Many2one("hr.employee", index=True)
     days = fields.Float(required=True)
     contracted_line_id = fields.Many2one(
         "ps.contracted.line", required=True, ondelete="cascade"
