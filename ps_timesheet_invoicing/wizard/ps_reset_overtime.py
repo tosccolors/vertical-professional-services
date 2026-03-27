@@ -2,6 +2,8 @@ from datetime import timedelta
 
 from odoo import _, fields, models
 
+from ..models.ps_time_line import OVERTIME_SENTINEL
+
 
 class PsResetOvertime(models.TransientModel):
     _name = "ps.reset.overtime"
@@ -52,7 +54,9 @@ class PsResetOvertime(models.TransientModel):
                 "project.project"
             ].search([("project_id.overtime_hrs", "=", True)], limit=1)
             overtime_project_task = ps_time_line.task_id
-            created_lines += PsTimeLine.create(
+            created_lines += PsTimeLine.with_context(
+                ps_timesheet_invoicing_overtime=OVERTIME_SENTINEL
+            ).create(
                 {
                     "name": _("Reset Overtime"),
                     "account_id": overtime_project.analytic_account_id.id,
