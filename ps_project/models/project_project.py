@@ -54,6 +54,8 @@ class Project(models.Model):
     partner_currency_id = fields.Many2one(
         related="partner_id.currency_id", string="Partner currency"
     )
+    ps_indexation = fields.Boolean("Indexation")
+    ps_contract_end_date = fields.Date("Contract end date")
 
     def name_get(self):
         return [

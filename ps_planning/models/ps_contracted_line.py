@@ -61,8 +61,8 @@ class PsContractedLine(models.Model):
         ondelete="cascade",
         required=True,
     )
-    date_from = fields.Date()
-    date_to = fields.Date()
+    date_from = fields.Date(copy=False)
+    date_to = fields.Date(copy=False)
     days = fields.Float()
     range_id = fields.Many2one("date.range", copy=False)
     rate = fields.Monetary(currency_field="currency_id", group_operator="avg")

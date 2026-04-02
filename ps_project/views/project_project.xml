@@ -76,6 +76,10 @@
                                 widget="float_time"
                             />
                         </group>
+                        <group name="ps_misc" string="Misc">
+                            <field name="ps_indexation" />
+                            <field name="ps_contract_end_date" />
+                        </group>
                     </group>
                 </page>
             </xpath>

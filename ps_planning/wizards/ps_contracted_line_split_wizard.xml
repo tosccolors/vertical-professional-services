@@ -1,0 +1,31 @@
+<odoo>
+    <record id="view_ps_contracted_line_split_wizard_form" model="ir.ui.view">
+        <field name="model">ps.contracted.line.split.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <group>
+                    <field name="contracted_line_ids" invisible="True" />
+                    <field name="split_on_range_id_domain" invisible="True" />
+                    <field name="split_on_range_id" domain="split_on_range_id_domain" />
+                </group>
+                <footer>
+                    <button
+                        type="object"
+                        name="action_split_contracted_lines"
+                        string="Split contracted lines"
+                        class="btn btn-primary"
+                    />
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_ps_contracted_line_split_wizard" model="ir.actions.act_window">
+        <field name="name">Split contracted lines</field>
+        <field name="res_model">ps.contracted.line.split.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_ps_contracted_line_split_wizard_form" />
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_ps_contracted_line" />
+        <field name="binding_type">action</field>
+    </record>
+</odoo>
