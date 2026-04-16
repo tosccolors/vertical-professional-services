@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="crm_case_form_view_oppor_inherited" model="ir.ui.view">
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form" />
+        <field name="arch" type="xml">
+            <xpath expr="//group[1]" position="before">
+                <div>
+                    <field name="contract_signed" nolabel="1" />
+                    <label for="contract_signed" />
+                    <br class="oe_edit_only" />
+                    <label for="docs_link" class="ml-4" />
+                    <field name="docs_link" widget="url" />
+                </div>
+                <field name="show_recalculate_total_button" invisible="1" />
+                <button
+                    name="recalculate_total"
+                    string="Re-calculate total"
+                    type="object"
+                    attrs="{'invisible': [('show_recalculate_total_button', '=', False)]}"
+                />
+                <group
+                    string="Monthly Expected Revenue"
+                    attrs="{'invisible': [('expected_revenue', '=', 0)]}"
+                >
+                    <group>
+                        <field name="start_date" />
+                    </group>
+                    <group>
+                        <field name="end_date" />
+                        <field name="latest_revenue_date" invisible="1" />
+                    </group>
+                </group>
+                <div attrs="{'invisible': [('expected_revenue', '=', 0)]}">
+                    <field name='id' invisible='True' />
+                    <field
+                        name="monthly_revenue_ids"
+                        context="{'default_lead_id':active_id, 'default_percentage': probability}"
+                        attrs="{'readonly': [('id','=', False )]}"
+                    >
+                        <tree
+                            editable="bottom"
+                            create="true"
+                            default_order="date"
+                            decoration-muted="computed_line"
+                        >
+                            <field name="project_id" invisible="1" />
+                            <field name="partner_id" invisible="1" />
+                            <field name="year" invisible="1" />
+                            <field name="department_id" invisible="1" />
+                            <field name="month" readonly="1" />
+                            <field name="date" />
+                            <field name="latest_revenue_date" invisible="1" />
+                            <field name="computed_line" invisible="1" />
+                            <field name="no_of_days" readonly="1" />
+                            <field name="weighted_revenue" readonly="1" sum="Total" />
+                            <field name="expected_revenue" sum="Total" />
+                            <field name="currency_id" invisible="True" />
+                            <field name="percentage" invisible="1" />
+                        </tree>
+                    </field>
+                </div>
+                <group string="Tariffs" name="tariffs">
+                    <field name="lead_employee_ids" nolabel="1">
+                        <tree editable="bottom">
+                            <field name="employee_id" />
+                            <field name="rate" />
+                            <field name="currency_id" invisible="1" />
+                        </tree>
+                    </field>
+                </group>
+            </xpath>
+            <xpath expr="//field[@name='date_deadline']" position="after">
+                <field name="project_id" />
+            </xpath>
+            <xpath expr="//h1" position="after">
+                <h2>
+                    <field name="subject" placeholder="Subject" />
+                </h2>
+            </xpath>
+            <xpath expr="//field[@name='user_id']" position="after">
+                <field name="operating_unit_id" />
+            </xpath>
+            <field name="tag_ids" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <xpath expr="//field[@name='team_id']" position="after">
+                <field
+                    name="department_id"
+                    domain="[('operating_unit_id', '=', operating_unit_id)]"
+                />
+            </xpath>
+            <xpath expr="//field[@name='team_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+            <xpath expr="//h2/div[2]" position="after">
+                <div>
+                    <label for="expected_duration" class="oe_edit_only" invisible="1" />
+                    <div class="o_row">
+                        <field name="expected_duration" invisible="1" />
+                    </div>
+                </div>
+            </xpath>
+            <xpath
+                expr="//sheet/group/group/field[@name='partner_id']"
+                position="after"
+            >
+                <field
+                    name="partner_contact_id"
+                    string="Contact Person"
+                    context="{'default_parent_id': partner_id}"
+                    domain="[('is_company', '=', False),('parent_id', '=', partner_id),('type', '=', 'contact')]"
+                />
+            </xpath>
+            <xpath
+                expr="//sheet/group/group[@name='lead_partner']/field[@name='partner_id']"
+                position="attributes"
+            >
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </xpath>
+            <xpath
+                expr="//sheet/group/group[@name='opportunity_partner']/field[@name='partner_id']"
+                position="attributes"
+            >
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page
+                    string="Revenue Split"
+                    attrs="{'invisible': [('type', '=', 'lead')]}"
+                >
+                    <field
+                        name="monthly_revenue_split_ids"
+                        widget="x2many_2d_matrix"
+                        field_x_axis="operating_unit_id"
+                        field_y_axis="month_id"
+                        field_value="percentage"
+                        show_column_totals="0"
+                    >
+                        <tree>
+                            <field name="operating_unit_id" />
+                            <field name="month_id" />
+                            <field name="percentage" />
+                            <field name="expected_revenue" />
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+            <field name="industry_id" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+            <field name="secondary_industry_ids" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </field>
+        </field>
+    </record>
+    <!-- Inherited crm.lead list view (as Lead) -->
+    <record id="crm_case_tree_view_leads_inherited_ps" model="ir.ui.view">
+        <field name="name">crm.lead.tree.lead</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_leads" />
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='contact_name']" position="before">
+                <field name="partner_name" string="Company Name" />
+            </xpath>
+            <xpath expr="//field[@name='contact_name']" position="after">
+                <!-- <field name="next_activity_id"/>  -->
+                <!-- commented -->
+                <!-- <field name="date_action"/> -->
+            </xpath>
+            <xpath expr="//field[@name='city']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='country_id']" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </xpath>
+            <xpath expr="//field[@name='phone']" position="after">
+                <field name="mobile" />
+                <field name="city" />
+                <field name="country_id" />
+                <field name="user_id" />
+            </xpath>
+            <xpath expr="//field[@name='team_id']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+        </field>
+    </record>
+    <!-- Inherited crm.lead list view (as Opportunity) -->
+    <record id="crm_case_tree_view_oppor_ps" model="ir.ui.view">
+        <field name="name">crm.lead.tree.opportunity</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor" />
+        <field name="arch" type="xml">
+            <field name="partner_id" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="partner_id" position="after">
+                <field name="partner_name" string="Potential customer" />
+                <field name="partner_contact_id" invisible="1" />
+            </field>
+            <field name="country_id" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="user_id" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="probability" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="stage_id" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="team_id" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="name" position="attributes">
+                <attribute name="string">Topic</attribute>
+            </field>
+            <field name="partner_name" position="after">
+                <field name="date_deadline" />
+                <field name="start_date" />
+                <field name="end_date" />
+                <field name="lead_employee_ids" widget="many2many_tags" />
+                <field name="prorated_revenue" />
+                <field name="priority" />
+                <field name="probability" />
+                <field name="user_id" string="Owner" />
+                <field name="department_id" string="Business line" />
+                <field name="tag_ids" string="Proposition" />
+                <field name="stage_id" />
+            </field>
+            <field name="create_date" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+        </field>
+    </record>
+    <!-- Inherited crm_industry module crm.lead list view (as Opportunity) -->
+    <record id="crm_case_tree_view_oppor_sector_ps" model="ir.ui.view">
+        <field name="name">Remove sector field from tree view</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm_industry.crm_case_tree_view_oppor" />
+        <field name="arch" type="xml">
+            <field name="industry_id" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+        </field>
+    </record>
+    <record model="ir.ui.view" id="view_create_opportunity_simplified_inherit">
+        <field name="name">crm.lead.quick.view</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.quick_create_opportunity_form" />
+        <field name="arch" type="xml">
+            <field name="partner_id" position="before">
+                <field name="name" position="move" />
+            </field>
+            <field name="partner_id" position="attributes">
+                <attribute name="string">Customer</attribute>
+                <attribute
+                    name="domain"
+                >['|', ('company_id', '=', False), ('company_id', '=', company_id), ('is_company', '=', True), ('customer_rank', '&gt;', 0)]</attribute>
+            </field>
+            <field name="name" position="after">
+                <field name="start_date" />
+                <field name="end_date" />
+            </field>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="operating_unit_id" />
+                <field name="department_id" />
+                <field name="date_deadline" />
+            </xpath>
+            <label for="expected_revenue" position="attributes">
+                <attribute name="string">Expected Revenue + Probability</attribute>
+            </label>
+            <xpath expr="//field[@name='expected_revenue']" position="after">
+                <field name="probability" />
+            </xpath>
+            <field name="email_from" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+            <field name="phone" position="attributes">
+                <attribute name="invisible">True</attribute>
+            </field>
+        </field>
+    </record>
+    <record id="crm.crm_lead_all_leads" model="ir.actions.act_window">
+        <field name="context">
+            {'default_type':'lead', 'search_default_type': 'lead',
+                'needaction_menu_ref': 'crm.menu_crm_opportunities',
+                'search_default_to_process':1}
+        </field>
+    </record>
+    <record id="crm.crm_lead_opportunities" model="ir.actions.act_window">
+        <field name="context">
+            {'default_type': 'opportunity', 'default_user_id': uid,
+                'search_default_assigned_to_me': 1}
+        </field>
+    </record>
+</odoo>

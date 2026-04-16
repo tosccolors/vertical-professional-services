@@ -5,36 +5,6 @@
             model="date.range.generator"
             name="create"
             eval="[{
-                'type_id': ref('ps_date_range_week.date_range_calender_week'),
-                'date_start': '2023-01-01',
-                'date_end': '2024-12-31',
-                'unit_of_time': '2',
-                'duration_count': 1,
-                'count': 104,
-                'name_prefix': 'Week ',
-            }]"
-        />
-    </function>
-    <function model="date.range.generator" name="action_apply">
-        <function
-            model="date.range.generator"
-            name="create"
-            eval="[{
-                'type_id': ref('account_fiscal_month.date_range_fiscal_month'),
-                'date_start': '2023-01-01',
-                'date_end': '2024-12-31',
-                'unit_of_time': '1',
-                'duration_count': 1,
-                'count': 24,
-                'name_prefix': 'Month ',
-            }]"
-        />
-    </function>
-    <function model="date.range.generator" name="action_apply">
-        <function
-            model="date.range.generator"
-            name="create"
-            eval="[{
                 'type_id': ref('ps_timesheet_invoicing.date_range_quarter'),
                 'date_start': '2023-01-01',
                 'date_end': '2024-12-31',

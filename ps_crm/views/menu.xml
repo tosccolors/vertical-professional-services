@@ -1,0 +1,12 @@
+<odoo>
+    <menuitem
+        id="menu_crm_monthly_revenue"
+        parent="crm.crm_menu_report"
+        action="crm_monthly_revenue_report_action"
+    />
+    <menuitem
+        id="menu_crm_monthly_revenue_split"
+        parent="crm.crm_menu_report"
+        action="crm_monthly_revenue_split_report_action"
+    />
+</odoo>

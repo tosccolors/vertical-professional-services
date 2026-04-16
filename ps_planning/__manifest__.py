@@ -26,6 +26,7 @@
         "views/templates.xml",
         "wizards/ps_planning_wizard.xml",
         "wizards/ps_planning_report_wizard.xml",
+        "wizards/ps_contracted_line_split_wizard.xml",
         "wizards/ps_contracting_wizard.xml",
         "views/menu.xml",
     ],

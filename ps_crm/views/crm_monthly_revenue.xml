@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="crm_monthly_revenue_form_view" model="ir.ui.view">
+        <field name="name">crm.monthly.revenue.form</field>
+        <field name="model">crm.monthly.revenue</field>
+        <field name="arch" type="xml">
+            <form string="Monthly Revenue">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="lead_id" readonly="1" />
+                            <field name="partner_id" readonly="1" />
+                            <field name="industry_id" readonly="1" />
+                            <field name="year" readonly="1" />
+                            <field name="month" readonly="1" />
+                            <field name="no_of_days" readonly="1" />
+                            <field name="project_id" readonly="1" />
+                        </group>
+                        <group>
+                            <field name="weighted_revenue" readonly="1" />
+                            <field name="expected_revenue" readonly="1" />
+                            <field name="percentage" widget="percentpie" readonly="1" />
+                            <field name="user_id" readonly="1" />
+                            <field
+                                name="department_id"
+                                readonly="1"
+                                string="Business line"
+                            />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <!--Monthly Revenue tree view-->
+    <record id="crm_monthly_revenue_tree_view" model="ir.ui.view">
+        <field name="name">crm.monthly.revenue.tree</field>
+        <field name="model">crm.monthly.revenue</field>
+        <field name="arch" type="xml">
+            <tree string="Monthly Revenue">
+                <field name="lead_id" />
+                <field name="partner_id" />
+                <field name="industry_id" />
+                <field name="year" />
+                <field name="month" />
+                <field name="no_of_days" />
+                <field name="project_id" />
+                <field name="department_id" string="Business line" />
+                <field name="weighted_revenue" />
+                <field name="expected_revenue" />
+                <field name="percentage" widget="integer" />
+                <field name="currency_id" invisible="1" />
+                <field name="user_id" invisible="1" />
+            </tree>
+        </field>
+    </record>
+    <!-- Monthly Revenue pivot View -->
+    <record id="crm_monthly_revenue_view_pivot" model="ir.ui.view">
+        <field name="name">crm.monthly.revenue.pivot</field>
+        <field name="model">crm.monthly.revenue</field>
+        <field name="arch" type="xml">
+            <pivot string="Monthly Revenue Analysis">
+                <field name="lead_id" type="row" />
+                <field name="date" interval="year" type="col" />
+                <field name="expected_revenue" type="measure" />
+                <field name="weighted_revenue" type="measure" />
+            </pivot>
+        </field>
+    </record>
+    <!-- Monthly Revenue Graph View -->
+    <record id="crm_monthly_revenue_view_graph" model="ir.ui.view">
+        <field name="name">crm.monthly.revenue.graph</field>
+        <field name="model">crm.monthly.revenue</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly Revenue Analysis" stacked="True">
+                <field name="lead_id" type="row" />
+                <field name="date" interval="year" type="col" />
+                <field name="expected_revenue" type="measure" />
+            </graph>
+        </field>
+    </record>
+    <record id="crm_monthly_revenue_search_view" model="ir.ui.view">
+        <field name="model">crm.monthly.revenue</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="lead_id" />
+                <field name="department_id" />
+                <field name="operating_unit_id" />
+                <filter
+                    name="exclude_lost_won"
+                    string="Exclude Lost/Won"
+                    domain="[('lead_id.stage_id.is_won', '=', False), ('lead_id.active', '=', True), ('lead_id.probability', '!=', 0)]"
+                />
+                <group expand="1" string="Group By">
+                    <filter
+                        string="Operating Unit"
+                        name='operating_unit_id'
+                        context="{'group_by':'operating_unit_id'}"
+                    />
+                    <filter
+                        string="Business line"
+                        name='department_id'
+                        context="{'group_by':'department_id'}"
+                    />
+                    <filter
+                        string="Customer"
+                        name='partner_id'
+                        context="{'group_by':'partner_id'}"
+                    />
+                    <filter
+                        string="Project"
+                        name='project_id'
+                        context="{'group_by':'project_id'}"
+                    />
+                    <filter
+                        string="Opportunity"
+                        name='lead_id'
+                        context="{'group_by':'lead_id'}"
+                    />
+                    <filter
+                        string="Salesperson"
+                        name='user_id'
+                        context="{'group_by':'user_id'}"
+                    />
+                </group>
+            </search>
+        </field>
+    </record>
+    <!--Monthly Revenue action-->
+    <record id="crm_monthly_revenue_report_action" model="ir.actions.act_window">
+        <field name="name">Monthly Revenue Analysis</field>
+        <field name="res_model">crm.monthly.revenue</field>
+        <field name="view_mode">pivot,graph,tree,form</field>
+        <field name="context">{'search_default_exclude_lost_won': 1}</field>
+    </record>
+</odoo>
