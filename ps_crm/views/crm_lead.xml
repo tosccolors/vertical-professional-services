@@ -61,7 +61,7 @@
                     </field>
                 </div>
                 <group string="Tariffs" name="tariffs">
-                    <field name="lead_employee_ids" nolabel="1">
+                    <field name="lead_employee_ids" nolabel="1" colspan="2">
                         <tree editable="bottom">
                             <field name="employee_id" />
                             <field name="rate" />

@@ -35,6 +35,7 @@
         "views/menu.xml",
     ],
     "demo": [
+        "demo/crm_lead.xml",
         "demo/date_range.xml",
         "demo/hr_department.xml",
         "demo/res_partner.xml",

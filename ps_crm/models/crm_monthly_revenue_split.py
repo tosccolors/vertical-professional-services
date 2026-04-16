@@ -13,8 +13,10 @@ class CrmMonthlyRevenueSplit(models.Model):
     project_id = fields.Many2one(related="lead_id.project_id", store=True)
     user_id = fields.Many2one(related="lead_id.user_id", store=True)
     name = fields.Char(related="lead_id.name", store=True)
-    lead_operating_unit_id = fields.Many2one("lead_id.operating_unit_id", store=True)
-    currency_id = fields.Many2one("lead_id.company_currency", store=True)
+    lead_operating_unit_id = fields.Many2one(
+        related="lead_id.operating_unit_id", store=True
+    )
+    currency_id = fields.Many2one(related="lead_id.company_currency", store=True)
     month_id = fields.Many2one("date.range", string="Month", required=True)
     operating_unit_id = fields.Many2one("operating.unit")
     percentage = fields.Float()

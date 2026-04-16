@@ -240,6 +240,6 @@ class TestMisc(TransactionCase):
                 ],
             }
         )
-        task.flush()
+        task.flush_model()
         self.assertEqual(time_line.line_fee_rate, 2 * line_fee_rate)
         self.assertEqual(time_line.product_id, new_product)

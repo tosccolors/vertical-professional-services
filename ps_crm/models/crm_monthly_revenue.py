@@ -91,7 +91,7 @@ class CrmMonthlyRevenue(models.Model):
     def onchange_lead_id(self):
         self.percentage = self.lead_id.probability
 
-    @api.onchange("date", "weight", "expected_revenue")
+    @api.onchange("date", "expected_revenue")
     def onchange_editable_fields(self):
         self.computed_line = False
 
