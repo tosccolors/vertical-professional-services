@@ -45,6 +45,20 @@
             </pivot>
         </field>
     </record>
+    <record id="view_ps_time_line_planning_report_tree" model="ir.ui.view">
+        <field name="model">ps.time.line.planning.report</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="days_contracted" sum="Sum" />
+                <field name="days_planned" sum="Sum" />
+                <field name="days_actual" sum="Sum" />
+                <field name="rate" />
+                <field name="project_id" />
+                <field name="employee_id" />
+                <field name="date" />
+            </tree>
+        </field>
+    </record>
     <record id="action_ps_time_line_planning_report" model="ir.actions.act_window">
         <field name="name">Activity Analysis (Contracted / Planned / Actual)</field>
         <field name="res_model">ps.time.line.planning.report</field>

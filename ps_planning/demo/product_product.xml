@@ -1,8 +1,16 @@
 <odoo>
     <record id="planning_product1" model="product.product">
         <field name="name">Planning product 1</field>
+        <field
+            name="categ_id"
+            eval="ref('ps_timesheet_invoicing.product_category_fee_rate')"
+        />
     </record>
     <record id="planning_product2" model="product.product">
         <field name="name">Planning product 2</field>
+        <field
+            name="categ_id"
+            eval="ref('ps_timesheet_invoicing.product_category_fee_rate')"
+        />
     </record>
 </odoo>

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t
+        t-name="ps_planning.PsPlanningMatrixRenderer"
+        t-inherit="web_widget_x2many_2d_matrix.X2Many2DMatrixRenderer"
+        t-inherit-mode="primary"
+        owl="1"
+    >
+        <table position="attributes">
+            <attribute name="class" remove="table-striped" separator=" " />
+            <attribute name="class" remove="table-hover" separator=" " />
+        </table>
+        <xpath expr="//thead/tr/th" position="inside">
+            <div class="d-flex">
+                <div>Total days</div>
+                <div>Type</div>
+                <div>Status</div>
+                <div>Task</div>
+                <div>Product</div>
+                <div>Rate</div>
+                <div>Employee</div>
+            </div>
+        </xpath>
+        <xpath expr="//tbody/tr" position="attributes">
+            <attribute name="t-att-class">
+                {'contracted-line': getRowRecordValue(row.value, 'line_type') ==
+                'contracted'}
+            </attribute>
+        </xpath>
+        <xpath expr="//tbody/tr/td/t" position="attributes">
+            <attribute name="t-if">False</attribute>
+        </xpath>
+        <xpath expr="//tbody/tr/td" position="inside">
+            <div class="d-flex">
+                <t t-if="getRowRecordValue(row.value, 'employee_id')">
+                    <div />
+                </t>
+                <t t-else="">
+                    <div>
+                        <t
+                            t-component="ValueFieldComponent"
+                            readonly="true"
+                            value="getRowRecordValue(row.value, 'contracted_days')"
+                        />
+                    </div>
+                </t>
+                <div t-out="getRowRecordValue(row.value, 'line_type')" />
+                <t t-if="getRowRecordValue(row.value, 'employee_id')">
+                    <div>
+                        <input
+                            type="checkbox"
+                            t-att-checked="getRowRecordValue(row.value, 'state') == 'final'"
+                            t-attf-id="checkbox-state{{row_index}}"
+                            t-on-change="onClickStateCheckbox"
+                            t-att-data-row-value="row.value"
+                            t-att-data-row="row_index"
+                        />
+                        <label t-attf-for="checkbox-state{{row_index}}">Final</label>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div />
+                </t>
+                <div t-out="getRowRecordValue(row.value, 'task_id')" />
+                <div t-out="getRowRecordValue(row.value, 'product_id')" />
+                <div>
+                    <t
+                        t-component="ValueFieldComponent"
+                        readonly="true"
+                        value="getRowRecordValue(row.value, 'daily_rate')"
+                    />
+                </div>
+                <t t-if="getRowRecordValue(row.value, 'employee_id')">
+                    <div t-out="getRowRecordValue(row.value, 'employee_id')" />
+                </t>
+                <t t-else="">
+                    <div />
+                </t>
+            </div>
+        </xpath>
+        <xpath
+            expr="//tfoot//t[@value='_aggregateColumn(column.value)']"
+            position="after"
+        >
+            <span>/</span>
+            <t
+                t-component="ValueFieldComponent"
+                readonly="true"
+                value="_aggregateColumnContracted(column_index)"
+            />
+        </xpath>
+        <xpath
+            expr="//tfoot//t[@value='_aggregateColumn(column.value)']"
+            position="attributes"
+        >
+            <attribute
+                name="value"
+                add="-_aggregateColumnContracted(column_index)"
+                separator=" "
+            />
+        </xpath>
+        <xpath expr="//tfoot//t[@value='_aggregateAll()']" position="after">
+            <span>/</span>
+            <t
+                t-component="ValueFieldComponent"
+                readonly="true"
+                value="_aggregateAllContracted()"
+            />
+        </xpath>
+        <xpath expr="//tfoot//t[@value='_aggregateAll()']" position="attributes">
+            <attribute name="value" add="-_aggregateAllContracted()" separator=" " />
+        </xpath>
+    </t>
+</templates>

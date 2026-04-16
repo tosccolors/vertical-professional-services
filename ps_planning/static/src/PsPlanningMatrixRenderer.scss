@@ -1,0 +1,43 @@
+.o_form_view .o_field_x2many_2d_matrix_ps_planning div.table-responsive {
+    max-height: none;
+}
+.o_form_view .o_field_x2many_2d_matrix_ps_planning table > thead > tr > th:first-child {
+    min-width: 40em;
+    left: 0;
+    z-index: 2;
+}
+.o_form_view .o_field_x2many_2d_matrix_ps_planning table > thead > tr > th:last-child {
+    right: 0;
+}
+.o_form_view
+    .o_field_x2many_2d_matrix_ps_planning
+    table
+    > *
+    > tr
+    > *:first-child
+    div.d-flex
+    div {
+    width: 14.2%;
+}
+.o_form_view .o_field_x2many_2d_matrix_ps_planning table > tbody > tr > td {
+    vertical-align: middle;
+    text-align: center;
+}
+.o_form_view .o_field_x2many_2d_matrix_ps_planning table > tbody > tr > td > div > div {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+.o_form_view .o_field_x2many_2d_matrix_ps_planning table > tbody > tr > td > span {
+    padding: 2px 4px;
+}
+.o_form_view
+    .o_field_x2many_2d_matrix_ps_planning
+    table
+    > tbody
+    > tr.contracted-line
+    > td {
+    background-color: var(--table-active-bg) !important;
+}
+.o_form_view .o_field_x2many_2d_matrix_ps_planning input[type="checkbox"] {
+    margin-right: 0.3em;
+}
