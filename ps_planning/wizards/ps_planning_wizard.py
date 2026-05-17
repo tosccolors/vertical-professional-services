@@ -27,6 +27,9 @@ class PsPlanningWizard(models.TransientModel):
         "product.product", compute="_compute_available_product_ids"
     )
     add_line_employee_id = fields.Many2one("hr.employee", string="Employee")
+    add_line_employee_id_domain = fields.Json(
+        compute="_compute_add_line_employee_id_domain"
+    )
 
     @api.depends("project_id")
     def _compute_available_period_ids(self):
@@ -50,6 +53,19 @@ class PsPlanningWizard(models.TransientModel):
         self.available_product_ids = self.contracted_line_ids.filtered(
             lambda x: x.task_id == self.add_line_task_id
         ).mapped("product_id")
+
+    @api.depends("add_line_task_id", "add_line_product_id", "line_ids")
+    def _compute_add_line_employee_id_domain(self):
+        self.add_line_employee_id_domain = [
+            (
+                "id",
+                "not in",
+                self.line_ids.filtered(
+                    lambda x: x.task_id == self.add_line_task_id
+                    and x.product_id == self.add_line_product_id
+                ).employee_id.ids,
+            ),
+        ]
 
     @api.onchange("project_id")
     def _onchange_project_id(self):
@@ -147,7 +163,6 @@ class PsPlanningWizard(models.TransientModel):
     def action_start_planning(self):
         PsPlanningLine = self.env["ps.planning.line"]
         months = self._get_months()
-        employees = self.env["hr.employee"].search([])
         self.line_ids.unlink()
 
         for contracted_line in self.contracted_line_ids:
@@ -175,16 +190,23 @@ class PsPlanningWizard(models.TransientModel):
                     planning_line_id=planning_line.id,
                     line_type="contracted",
                 )
+
+                employee_groups = PsPlanningLine.read_group(
+                    [
+                        ("task_id", "=", task.id),
+                        ("product_id", "=", product.id),
+                        ("line_type", "=", "planned"),
+                        ("range_id.date_start", ">=", self.period_id.date_start),
+                        ("range_id.date_start", "<=", self.period_id.date_end),
+                    ],
+                    ["employee_id"],
+                    ["employee_id"],
+                )
+                employees = self.env["hr.employee"].browse(
+                    [group["employee_id"][0] for group in employee_groups]
+                )
+
                 for employee in employees:
-                    if not PsPlanningLine.search_count(
-                        [
-                            ("task_id", "=", task.id),
-                            ("product_id", "=", product.id),
-                            ("line_type", "=", "planned"),
-                            ("employee_id", "=", employee.id),
-                        ],
-                    ):
-                        continue
                     self._add_line(date_range, task, product, employee)
 
         action = self.env["ir.actions.actions"]._for_xml_id(
@@ -230,7 +252,7 @@ class PsPlanningWizardLine(models.TransientModel):
     _description = "PS planning wizard line"
     _order = "y_axis, range_id"
 
-    wizard_id = fields.Many2one("ps.planning.wizard", required=True)
+    wizard_id = fields.Many2one("ps.planning.wizard", required=True, ondelete="cascade")
     y_axis = fields.Char()
     y_axis_display = fields.Char()
     range_id = fields.Many2one("date.range")

@@ -8,6 +8,31 @@ from odoo import _, api, fields, models, tools
 from odoo.exceptions import UserError, ValidationError
 
 
+def _get_work_days_dates(date_start, date_end):
+    start_weekday = date_start.weekday()
+    end_weekday = date_end.weekday()
+    weeks = (
+        (
+            (date_end + relativedelta(weekday=SU))
+            - (
+                date_start
+                + (
+                    relativedelta(weekday=SA)
+                    if start_weekday != 6
+                    else relativedelta(days=-1)
+                )
+            )
+        ).days
+        - 1
+    ) / 7
+    days = weeks * 5
+    if start_weekday < 5:
+        days += 5 - start_weekday
+    if end_weekday < 4:
+        days -= 4 - end_weekday
+    return days
+
+
 class PsContractedLine(models.Model):
     _name = "ps.contracted.line"
     _inherit = "ps.planning.department.mixin"
@@ -36,8 +61,8 @@ class PsContractedLine(models.Model):
         ondelete="cascade",
         required=True,
     )
-    date_from = fields.Date()
-    date_to = fields.Date()
+    date_from = fields.Date(copy=False)
+    date_to = fields.Date(copy=False)
     days = fields.Float()
     range_id = fields.Many2one("date.range", copy=False)
     rate = fields.Monetary(currency_field="currency_id", group_operator="avg")
@@ -234,25 +259,4 @@ class PsContractedLine(models.Model):
         return self._get_work_days_dates(period.date_start, period.date_end)
 
     def _get_work_days_dates(self, date_start, date_end):
-        start_weekday = date_start.weekday()
-        end_weekday = date_end.weekday()
-        weeks = (
-            (
-                (date_end + relativedelta(weekday=SU))
-                - (
-                    date_start
-                    + (
-                        relativedelta(weekday=SA)
-                        if start_weekday != 6
-                        else relativedelta(days=-1)
-                    )
-                )
-            ).days
-            - 1
-        ) / 7
-        days = weeks * 5
-        if start_weekday < 5:
-            days += 5 - start_weekday
-        if end_weekday < 4:
-            days -= 4 - end_weekday
-        return days
+        return _get_work_days_dates(date_start, date_end)

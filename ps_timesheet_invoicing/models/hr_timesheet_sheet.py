@@ -9,6 +9,8 @@ from odoo.exceptions import UserError, ValidationError
 from odoo.osv.expression import TRUE_LEAF
 from odoo.tools import float_compare
 
+from .ps_time_line import OVERTIME_SENTINEL
+
 _logger = logging.getLogger(__name__)
 
 
@@ -509,7 +511,9 @@ class HrTimesheetSheet(models.Model):
                 raise ValidationError(_("Please define project with 'Overtime Hours'!"))
 
             uom = self.env.ref("uom.product_uom_hour").id
-            ps_time_line = ps_time_line.create(
+            ps_time_line = ps_time_line.with_context(
+                ps_timesheet_invoicing_overtime=OVERTIME_SENTINEL
+            ).create(
                 {
                     "name": "Overtime line",
                     "account_id": overtime_project.analytic_account_id.id,

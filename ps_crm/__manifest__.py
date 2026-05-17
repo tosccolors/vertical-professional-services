@@ -11,6 +11,7 @@
     "depends": [
         "account_analytic_tag",
         "base",
+        "account_fiscal_month",
         "uom",
         "crm",
         "crm_industry",
@@ -26,10 +27,16 @@
     "data": [
         "security/crm_security.xml",
         "security/ir.model.access.csv",
-        "views/crm_lead_views.xml",
+        "views/crm_lead.xml",
+        "views/crm_monthly_revenue.xml",
+        "views/crm_monthly_revenue_split.xml",
+        "views/crm_stage.xml",
         "views/hr_department.xml",
+        "views/menu.xml",
     ],
     "demo": [
+        "demo/crm_lead.xml",
+        "demo/date_range.xml",
         "demo/hr_department.xml",
         "demo/res_partner.xml",
     ],

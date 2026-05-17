@@ -94,7 +94,11 @@ class PsPlanningBillingReport(models.Model):
                     from account_move_line aml
                     join ps_invoice psi on aml.ps_invoice_id=psi.id
                     where
-                    aml.analytic_account_id=project_project.analytic_account_id
+                    project_project.analytic_account_id = any(array(
+                        select _id::int from jsonb_object_keys(
+                            coalesce(aml.analytic_distribution, '{}')
+                        ) as _dummy(_id)
+                    ))
                     and aml.product_uom_id=(select product_uom_hour from xmlids)
                     and psi.period_id=ps_planning_line_planned.range_id
                 )
@@ -108,11 +112,15 @@ class PsPlanningBillingReport(models.Model):
                 ELSE 0
                 END as billed_days,
                 (
-                    select sum(aml.price_total)
+                    select sum(aml.balance)
                     from account_move_line aml
                     join ps_invoice psi on aml.ps_invoice_id=psi.id
                     where
-                    aml.analytic_account_id=project_project.analytic_account_id
+                    project_project.analytic_account_id = any(array(
+                        select _id::int from jsonb_object_keys(
+                            coalesce(aml.analytic_distribution, '{}')
+                        ) as _dummy(_id)
+                    ))
                     and aml.product_uom_id=(
                         CASE
                         WHEN project_invoicing_properties.actual_time_spent THEN (

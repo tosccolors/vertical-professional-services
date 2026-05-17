@@ -42,7 +42,7 @@ class TestPsPlanning(TransactionCase):
         with self.assertRaisesRegex(
             ValidationError, "must be unique"
         ), self.env.cr.savepoint():
-            product1_task1_line.copy()
+            product1_task1_line.copy({"range_id": product1_task1_line.range_id.id})
 
         with self.assertRaisesRegex(
             ValidationError, "overlapping"

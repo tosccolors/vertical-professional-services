@@ -10,6 +10,8 @@ from psycopg2.extensions import AsIs
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+OVERTIME_SENTINEL = object()
+
 
 class TimeLine(models.Model):
     _name = "ps.time.line"
@@ -129,6 +131,15 @@ class TimeLine(models.Model):
                 line.line_fee_rate = line.get_fee_rate()[0]
                 line.amount = line.get_fee_rate_amount()
                 line.product_id = line.get_task_user_product()
+
+    @api.constrains("project_id")
+    def _check_project_id_overtime_hours(self):
+        if self.env.context.get("ps_timesheet_invoicing_overtime") == OVERTIME_SENTINEL:
+            return
+        if any(self.mapped("project_id.overtime_hrs")):
+            raise ValidationError(
+                _("You are not allowed to write on the overtime project manually")
+            )
 
     @api.model
     def _default_user(self):

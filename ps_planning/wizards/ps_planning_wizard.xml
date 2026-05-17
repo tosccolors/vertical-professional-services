@@ -18,46 +18,51 @@
                         options="{'no_create': true}"
                     />
                 </group>
-                <group
+                <div
                     name="add_line"
-                    class="oe-edit-only"
                     attrs="{'invisible': [('line_ids', '=', [])]}"
-                    col="7"
+                    class="mb-3"
                 >
+                    <label for="add_line_task_id" />
                     <field
                         name="add_line_task_id"
                         domain="[('id', 'in', available_task_ids)]"
-                        options="{'no_create': true}"
+                        options="{'no_create': true, 'no_open': true}"
                     />
+                    <label for="add_line_product_id" class="ms-3" />
                     <field
                         name="add_line_product_id"
                         domain="[('id', 'in', available_product_ids)]"
-                        options="{'no_create': true}"
+                        options="{'no_create': true, 'no_open': true}"
                     />
-                    <field name="add_line_employee_id" options="{'no_create': true}" />
+                    <label for="add_line_employee_id" class="ms-3" />
+                    <field
+                        name="add_line_employee_id"
+                        options="{'no_create': true, 'no_open': true}"
+                        domain="add_line_employee_id_domain"
+                    />
+                    <field name="add_line_employee_id_domain" invisible="True" />
                     <button
                         type="object"
                         name="action_add_line"
-                        class="btn btn-primary"
+                        class="btn btn-primary ms-3"
                     >
                         Add line
                     </button>
-                </group>
+                </div>
                 <field
                     name="line_ids"
                     widget="x2many_2d_matrix_ps_planning"
                     field_x_axis="range_id"
                     field_y_axis="y_axis"
                     field_value="days"
-                    field_label_y_axis="y_axis_display"
-                    field_att_disabled="disabled"
                     attrs="{'invisible': [('line_ids', '=', [])]}"
+                    class="w-100"
                 >
-                    <tree>
+                    <tree limit="1000000">
                         <field name="range_id" />
                         <field name="y_axis" />
                         <field name="days" />
-                        <field name="y_axis_display" />
                         <field name="product_id" />
                         <field name="task_id" />
                         <field name="line_type" />
@@ -68,7 +73,7 @@
                         <field name="disabled" />
                     </tree>
                 </field>
-                <footer invisible="context.get('hide_footer')">
+                <div>
                     <button
                         type="object"
                         name="action_start_planning"
@@ -76,14 +81,14 @@
                         attrs="{'invisible': [('line_ids', '!=', [])]}"
                         class="btn btn-primary"
                     />
-                </footer>
-                <button
-                    type="object"
-                    name="action_commit_planning"
-                    string="Commit planning"
-                    attrs="{'invisible': [('line_ids', '=', [])]}"
-                    class="btn btn-primary"
-                />
+                    <button
+                        type="object"
+                        name="action_commit_planning"
+                        string="Commit planning"
+                        attrs="{'invisible': [('line_ids', '=', [])]}"
+                        class="btn btn-primary"
+                    />
+                </div>
             </form>
         </field>
     </record>

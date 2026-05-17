@@ -1,0 +1,8 @@
+<odoo>
+    <function model="crm.lead" name="write">
+        <value model="crm.lead" search="[('operating_unit_id', '=', False)]" />
+        <value
+            eval="{'operating_unit_id': ref('operating_unit.main_operating_unit')}"
+        />
+    </function>
+</odoo>

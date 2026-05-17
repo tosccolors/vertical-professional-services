@@ -4,7 +4,7 @@
 {
     "name": "PS planning",
     "summary": "Planning tool for professional services",
-    "version": "14.0.1.0.1",
+    "version": "16.0.1.0.1",
     "development_status": "Alpha",
     "category": "Planning",
     "website": "http://www.tosc.nl",
@@ -13,6 +13,7 @@
     "depends": [
         "ps_timesheet_invoicing",
         "project_department",
+        "web_widget_x2many_2d_matrix",
     ],
     "data": [
         "data/date_range_type.xml",
@@ -23,9 +24,9 @@
         "views/ps_planning_line.xml",
         "views/ps_planning_billing_report.xml",
         "views/ps_time_line_planning_report.xml",
-        "views/templates.xml",
         "wizards/ps_planning_wizard.xml",
         "wizards/ps_planning_report_wizard.xml",
+        "wizards/ps_contracted_line_split_wizard.xml",
         "wizards/ps_contracting_wizard.xml",
         "views/menu.xml",
     ],
@@ -34,4 +35,9 @@
         "demo/project_task.xml",
         "demo/product_product.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "ps_planning/static/src/*",
+        ],
+    },
 }

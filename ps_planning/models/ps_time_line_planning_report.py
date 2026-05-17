@@ -37,6 +37,11 @@ class PsTimeLinePlanningReport(models.Model):
                 0 as days_contracted,
                 0 as rate
             FROM ps_time_line
+            WHERE
+                product_uom_id=(
+                    SELECT res_id FROM ir_model_data WHERE
+                    module='uom' AND name='product_uom_hour'
+                )
             UNION (
             WITH
             xmlid_month_range AS (
