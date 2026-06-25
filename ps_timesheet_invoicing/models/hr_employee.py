@@ -30,7 +30,21 @@ class HrEmployee(models.Model):
         groups="hr.group_hr_user",
     )
     no_ott_check = fields.Boolean(
-        "8 Hours OTT possible", help="No Overtime Check", groups="hr.group_hr_user"
+        "Disable overtime restrictions",
+        help="No Overtime Check",
+        groups="hr.group_hr_user",
+    )
+    max_overtime_week = fields.Float(
+        "Maximum overtime (week)",
+        help="Maximum overtime hours per week. "
+        "If this is 0, the value from the employee's department is used",
+        groups="hr.group_hr_user",
+    )
+    max_overtime_day = fields.Float(
+        "Maximum overtime (day)",
+        help="Maximum overtime hours per day. "
+        "If this is 0, the value from the employee's department is used",
+        groups="hr.group_hr_user",
     )
 
     @api.depends("product_id.list_price")
