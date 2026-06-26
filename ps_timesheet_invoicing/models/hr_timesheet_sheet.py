@@ -434,6 +434,14 @@ class HrTimesheetSheet(models.Model):
             self.employee_id.sudo().no_ott_check
             or self.employee_id.sudo().department_id.no_ott_check
         )
+        max_overtime_week = (
+            self.employee_id.sudo().max_overtime_week
+            or self.employee_id.sudo().department_id.max_overtime_week
+        )
+        max_overtime_day = (
+            self.employee_id.sudo().max_overtime_day
+            or self.employee_id.sudo().department_id.max_overtime_day
+        )
         for i in range(7):
             date = datetime.strftime(date_from + timedelta(days=i), "%Y-%m-%d")
             hour = sum(
@@ -475,25 +483,36 @@ class HrTimesheetSheet(models.Model):
                 if (
                     not no_ott_check
                     and float_compare(
-                        ot_hrs, 4, precision_digits=3, precision_rounding=None
+                        ot_hrs,
+                        max_overtime_day,
+                        precision_digits=3,
+                        precision_rounding=None,
                     )
                     > 0
                 ):
                     raise UserError(
                         _(
-                            "Each day maximum 4 hours overtime taken allowed from "
+                            "Each day maximum %d hours overtime taken allowed from "
                             "Monday to Friday."
                         )
+                        % max_overtime_day
                     )
                 tot_ot_hrs += ot_hrs
         if (
             not GTM
+            and not no_ott_check
             and float_compare(
-                tot_ot_hrs, 8, precision_digits=3, precision_rounding=None
+                tot_ot_hrs,
+                max_overtime_week,
+                precision_digits=3,
+                precision_rounding=None,
             )
             > 0
         ):
-            raise UserError(_("Maximum 8 hours overtime taken allowed in a week."))
+            raise UserError(
+                _("Maximum %d hours overtime taken allowed in a week.")
+                % max_overtime_week
+            )
         return super().action_timesheet_confirm()
 
     def create_overtime_entries(self):

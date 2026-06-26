@@ -38,6 +38,16 @@
                     <field name="timesheet_optional" />
                     <field name="timesheet_no_8_hours_day" />
                     <field name="no_ott_check" />
+                    <field
+                        name="max_overtime_day"
+                        attrs="{'invisible': [('no_ott_check', '=', True)]}"
+                        widget="float_time"
+                    />
+                    <field
+                        name="max_overtime_week"
+                        attrs="{'invisible': [('no_ott_check', '=', True)]}"
+                        widget="float_time"
+                    />
                     <field name="overtime_hours" widget="float_time" invisible="1" />
                 </xpath>
             </field>

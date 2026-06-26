@@ -7,4 +7,12 @@ from odoo import fields, models
 class HrDepartment(models.Model):
     _inherit = "hr.department"
 
-    no_ott_check = fields.Boolean("8 Hours OTT possible", help="No Overtime Check")
+    no_ott_check = fields.Boolean(
+        "Disable overtime restrictions", help="No Overtime Check"
+    )
+    max_overtime_week = fields.Float(
+        "Maximum overtime (week)", help="Maximum overtime hours per week", default=8
+    )
+    max_overtime_day = fields.Float(
+        "Maximum overtime (day)", help="Maximum overtime hours per day", default=4
+    )
