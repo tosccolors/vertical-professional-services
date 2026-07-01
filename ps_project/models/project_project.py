@@ -55,6 +55,7 @@ class Project(models.Model):
         related="partner_id.currency_id", string="Partner currency"
     )
     ps_indexation = fields.Boolean("Indexation")
+    ps_date_indexation = fields.Date("Date of first indexation")
     ps_contract_end_date = fields.Date("Contract end date")
 
     def name_get(self):
