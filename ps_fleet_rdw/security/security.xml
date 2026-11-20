@@ -1,7 +1,0 @@
-<odoo>
-    <record id="rdw_api_rights" model="res.groups">
-        <field name="category_id" ref="fleet.module_fleet_category" />
-        <field name="name">RDW API Rights</field>
-        <field name="users" eval="[(4, ref('base.user_admin'))]" />
-    </record>
-</odoo>
