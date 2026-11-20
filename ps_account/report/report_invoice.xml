@@ -807,7 +807,7 @@
             id="report_invoice_document_ps"
             inherit_id="account.report_invoice_document"
         >
-            <xpath expr="//div[@class='mt-5']" position="after">
+            <xpath expr="//div[hasclass('mt-5')]" position="after">
                 <div style="page-break-before:always;" />
                 <t
                     t-set="analytic_invoice_id"

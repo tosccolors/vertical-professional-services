@@ -1,5 +1,0 @@
-<odoo>
-    <record id="demo_equipment_category" model="maintenance.equipment.category">
-        <field name="name">Demo equipment category</field>
-    </record>
-</odoo>

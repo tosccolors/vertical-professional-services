@@ -14,13 +14,14 @@ class FleetVehicleLogContract(models.Model):
     price_less_km = fields.Float("Price less km")
     lease_period = fields.Integer("Lease Period")
 
-    @api.model
-    def create(self, vals):
-        if vals.get("start_date") and vals.get("lease_period", 0) > 0:
-            start_date = fields.Date.to_date(vals.get("start_date"))
-            end_date = start_date + relativedelta(months=vals.get("lease_period"))
-            vals.update({"expiration_date": end_date})
-        return super().create(vals)
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get("start_date") and vals.get("lease_period", 0) > 0:
+                start_date = fields.Date.to_date(vals.get("start_date"))
+                end_date = start_date + relativedelta(months=vals.get("lease_period"))
+                vals.update({"expiration_date": end_date})
+        return super().create(vals_list)
 
     def write(self, vals):
         for this in self:

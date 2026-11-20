@@ -1,2 +1,0 @@
-Restricting Menu Visibility
-===========================

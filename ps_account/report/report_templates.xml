@@ -99,7 +99,7 @@
         inherit_id="report_qweb_operating_unit.external_layout_bold_ou"
         priority="99"
     >
-        <xpath expr="//div[@class='o_clean_header']" position="attributes">
+        <xpath expr="//div[hasclass('o_clean_header')]" position="attributes">
             <attribute name="t-if">
                 o and o.operating_unit_id and not
                 o.operating_unit_id.report_background_image1
