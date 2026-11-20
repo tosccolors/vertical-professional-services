@@ -8,7 +8,7 @@
             t-att-data-oe-lang="o and o.env.context.get('lang')"
         >
             <t t-call="web.address_layout" />
-            <t t-raw="0" />
+            <t t-out="0" />
         </div>
     </template>
     <template id="external_layout_ps">
@@ -26,7 +26,7 @@
             </t>
         </t>
         <t t-call="ps_account.external_layout_ps_header_ou">
-            <t t-raw="0" />
+            <t t-out="0" />
         </t>
     </template>
 </odoo>

@@ -257,8 +257,8 @@ class HrTimesheetSheet(models.Model):
     )
     odo_log_id = fields.Many2one("fleet.vehicle.odometer", string="Odo Log ID")
     overtime_line_id = fields.Many2one("ps.time.line", string="Overtime Entry")
-    date_start = fields.Date(related="week_id.date_start")
-    date_end = fields.Date(related="week_id.date_end")
+    date_start = fields.Date(related="week_id.date_start", default=None)
+    date_end = fields.Date(related="week_id.date_end", default=None)
 
     state = fields.Selection(
         help=" * The 'Open' status is used when a user is encoding a new and "

@@ -183,10 +183,11 @@ class TaskUser(models.Model):
         self.env.cr.execute(list_query, ptl_where_clause_params)
         return True
 
-    @api.model
-    def create(self, vals):
-        res = super().create(vals)
-        res.update_ps_time_lines()
+    @api.model_create_multi
+    def create(self, vals_list):
+        res = super().create(vals_list)
+        for this in res:
+            this.update_ps_time_lines()
         return res
 
     def write(self, vals):

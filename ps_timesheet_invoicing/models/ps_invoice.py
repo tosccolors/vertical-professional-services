@@ -543,10 +543,10 @@ class PSInvoice(models.Model):
                                 for key, value in cmd_tuple[2].items():
                                     setattr(invoice_line, key, value)
 
-    @api.model
-    def create(self, vals):
-        res = super().create(vals)
-        analytic_lines = res.user_total_ids.mapped("detail_ids")
+    @api.model_create_multi
+    def create(self, vals_list):
+        res = super().create(vals_list)
+        analytic_lines = res.user_total_ids.detail_ids
         if analytic_lines:
             analytic_lines.write({"state": "progress"})
         return res

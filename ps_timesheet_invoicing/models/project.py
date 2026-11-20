@@ -22,9 +22,6 @@ class Project(models.Model):
             ("ctm", "Capped Time and Material"),
         ],
     )
-    invoice_schedule_ids = fields.One2many(
-        "invoice.schedule.lines", "project_id", string="Invoice Schedule"
-    )
     standard_task_id = fields.Many2one(
         "project.task", compute=_compute_standard, string="Standard Task", store=True
     )
@@ -92,12 +89,3 @@ class Project(models.Model):
             or self.partner_id
             or self.analytic_account_id.partner_id
         )
-
-
-class InvoiceScheduleLine(models.Model):
-    _name = "invoice.schedule.lines"
-    _description = "Invoice schedule"
-
-    project_id = fields.Many2one(
-        "project.project",
-    )

@@ -83,11 +83,12 @@ class FleetVehicleOdometer(models.Model):
             order="date asc",
         )
 
-    @api.model
-    def create(self, data):
-        res = super().create(data)
-        if res._find_newer():
-            res._update_newer()
+    @api.model_create_multi
+    def create(self, vals_list):
+        res = super().create(vals_list)
+        for this in res:
+            if this._find_newer():
+                this._update_newer()
         return res
 
     def write(self, data):

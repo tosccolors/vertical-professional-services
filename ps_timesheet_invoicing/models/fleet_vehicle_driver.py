@@ -6,10 +6,11 @@ from odoo import _, api, exceptions, fields, models
 inhibit_constraints_sentinel = object()
 
 
-class FleetVehicle(models.Model):
+class FleetVehicleDriver(models.Model):
     _name = "fleet.vehicle.driver"
     _rec_name = "driver_id"
     _order = "date_start desc"
+    _description = "Driver"
 
     vehicle_id = fields.Many2one("fleet.vehicle", required=True, string="Vehicle")
     driver_id = fields.Many2one("res.partner", required=True, string="Driver")
